@@ -1,3007 +1,589 @@
 <!DOCTYPE html>
-
 <html lang="hu">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Viewer</title>
-    <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
-    <!-- Feather Icons -->
-
-```
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Táblázat</title>
 <style>
     :root {
-        --bg-primary: #1a237e;
-        --bg-secondary: #ffffff;
-        --bg-tertiary: #f9f9f9;
-        --text-primary: #333333;
-        --text-secondary: #666666;
-        --accent-primary: #667eea;
-        --accent-secondary: #764ba2;
-        --border-color: #e0e0e0;
-        --success: #4caf50;
-        --error: #f44336;
-        --warning: #ff9800;
-        --shadow: rgba(0,0,0,0.1);
+        --bg-primary:#1a237e;--bg-secondary:#ffffff;--bg-tertiary:#f9f9f9;
+        --text-primary:#333333;--text-secondary:#666666;
+        --accent-primary:#667eea;--accent-secondary:#764ba2;
+        --border-color:#e0e0e0;--success:#4caf50;--error:#f44336;
+        --warning:#ff9800;--shadow:rgba(0,0,0,0.1);
     }
-    
     [data-theme="dark"] {
-        --bg-primary: #1a1d29;
-        --bg-secondary: #242837;
-        --bg-tertiary: #2f3447;
-        --text-primary: #ffffff;
-        --text-secondary: #c9d1d9;
-        --border-color: #4a5064;
-        --shadow: rgba(0,0,0,0.5);
-        --accent-primary: #8b9dff;
-        --accent-secondary: #a998ff;
-        --success: #6fd195;
-        --error: #ff6b6b;
-    }
-    
-    * {
-        margin: 0;
-        padding: 0;
-        box-sizing: border-box;
-    }
-    
-    body {
-        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-        margin: 0;
-        padding: 10px;
-        background: var(--bg-primary);
-        min-height: 100vh;
-        transition: background 0.3s ease;
-    }
-    
-    .container {
-        background: var(--bg-secondary);
-        padding: 15px 20px;
-        border-radius: 15px;
-        box-shadow: 0 10px 40px var(--shadow);
-        margin: 0 auto;
-        max-width: 99%;
-        transition: all 0.3s ease;
-    }
-    
-    .header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 15px;
-    }
-    
-    h1 {
-        color: var(--text-primary);
-        text-align: center;
-        margin: 0;
-        font-size: 24px;
-        flex-grow: 1;
-    }
-    
-    .theme-toggle {
-        background: var(--accent-primary);
-        border: none;
-        color: white;
-        width: 40px;
-        height: 40px;
-        border-radius: 50%;
-        cursor: pointer;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        transition: all 0.3s ease;
-        box-shadow: 0 2px 5px var(--shadow);
-        -webkit-tap-highlight-color: transparent;
-        touch-action: manipulation;
-        min-width: 44px;
-        min-height: 44px;
-    }
-    
-    .theme-toggle:hover {
-        background: var(--accent-secondary);
-        transform: scale(1.1);
-    }
-    
-    .upload-area {
-        border: 3px dashed var(--accent-primary);
-        border-radius: 10px;
-        padding: 20px;
-        text-align: center;
-        background: var(--bg-tertiary);
-        transition: all 0.3s ease;
-        cursor: pointer;
-    }
-    
-    .upload-area.compact {
-        padding: 10px;
-        border: 2px dashed var(--accent-primary);
-    }
-    
-    .upload-area.compact .upload-icon {
-        font-size: 20px;
-        margin-bottom: 5px;
-    }
-    
-    .upload-area.compact .upload-text {
-        font-size: 12px;
-    }
-    
-    .upload-area.compact .upload-subtext {
-        display: none;
-    }
-    
-    .upload-area:hover {
-        background: var(--bg-tertiary);
-        border-color: var(--accent-secondary);
-        transform: translateY(-2px);
-    }
-    
-    .upload-icon {
-        font-size: 32px;
-        margin-bottom: 10px;
-        color: var(--accent-primary);
-    }
-    
-    .upload-text {
-        font-size: 14px;
-        color: var(--accent-primary);
-        font-weight: 600;
-    }
-    
-    .upload-subtext {
-        font-size: 12px;
-        color: var(--text-secondary);
-        margin-top: 5px;
-    }
-    
-    input[type="file"] {
-        display: none;
-    }
-    
-    .filename-display {
-        text-align: center;
-        margin-top: 10px;
-        font-size: 14px;
-        color: var(--text-secondary);
-    }
-    
-    .select-container {
-        margin-top: 20px;
-        width: 100%;
-    }
-    
-    .file-info {
-        background: var(--bg-tertiary);
-        padding: 10px 15px;
-        border-radius: 10px;
-        margin-bottom: 15px;
-        width: 100%;
-        box-sizing: border-box;
-    }
-    
-    .info-item {
-        margin: 5px 0;
-        font-size: 16px;
-        color: var(--text-primary);
-    }
-    
-    .info-item strong {
-        color: var(--accent-secondary);
-    }
-    
-    .view-toggle-btn {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 10px;
-        width: 100%;
-        max-width: 100%;
-        padding: 16px 24px;
-        margin: 15px 0;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        color: white;
-        border: none;
-        border-radius: 12px;
-        cursor: pointer;
-        font-size: 16px;
-        font-weight: 700;
-        letter-spacing: 0.5px;
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        box-shadow: 0 8px 24px rgba(102, 126, 234, 0.4);
-        min-height: 56px;
-        -webkit-tap-highlight-color: transparent;
-        touch-action: manipulation;
-        position: relative;
-        overflow: hidden;
-    }
-    
-    .view-toggle-btn::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: -100%;
-        width: 100%;
-        height: 100%;
-        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
-        transition: left 0.5s;
-    }
-    
-    .view-toggle-btn:hover::before {
-        left: 100%;
-    }
-    
-    .view-toggle-btn:hover {
-        transform: translateY(-3px);
-        box-shadow: 0 12px 32px rgba(102, 126, 234, 0.5);
-    }
-    
-    .view-toggle-btn:active {
-        transform: translateY(-1px);
-        box-shadow: 0 6px 16px rgba(102, 126, 234, 0.4);
-    }
-    
-    .search-container {
-        display: none !important;
-    }
-    
-    .search-input {
-        width: 100%;
-        padding: 12px 40px 12px 15px;
-        font-size: 15px;
-        border: 2px solid var(--border-color);
-        border-radius: 8px;
-        background: var(--bg-secondary);
-        color: var(--text-primary);
-        transition: all 0.3s ease;
-    }
-    
-    .search-input:focus {
-        outline: none;
-        border-color: var(--accent-primary);
-        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
-    }
-    
-    .search-icon {
-        pointer-events: none;
-        position: absolute;
-        right: 12px;
-        top: 50%;
-        transform: translateY(-50%);
-        color: var(--text-secondary);
-    }
-    
-    .sort-buttons {
-        display: flex;
-        gap: 10px;
-        margin-bottom: 15px;
-        justify-content: center;
-        flex-wrap: wrap;
-    }
-    
-    .sort-btn {
-        padding: 10px 20px;
-        font-size: 14px;
-        border: 2px solid var(--accent-primary);
-        border-radius: 8px;
-        background: var(--bg-secondary);
-        color: var(--accent-primary);
-        cursor: pointer;
-        transition: all 0.3s ease;
-        font-weight: 600;
-        min-height: 44px;
-        -webkit-tap-highlight-color: transparent;
-        touch-action: manipulation;
-    }
-    
-    .sort-btn:hover {
-        background: var(--accent-primary);
-        color: white;
-        transform: translateY(-2px);
-    }
-    
-    .sort-btn.active {
-        background: var(--accent-primary);
-        color: white;
-    }
-    
-    select {
-        width: 100%;
-        padding: 15px;
-        font-size: 16px;
-        border: 2px solid var(--border-color);
-        border-radius: 8px;
-        background: var(--bg-secondary);
-        color: var(--text-primary);
-        cursor: pointer;
-        transition: all 0.3s ease;
-        -webkit-tap-highlight-color: transparent;
-        touch-action: manipulation;
-    }
-    
-    select:hover {
-        border-color: var(--accent-primary);
-    }
-    
-    select:focus {
-        outline: none;
-        border-color: var(--accent-secondary);
-        box-shadow: 0 0 0 3px rgba(118, 75, 162, 0.1);
-    }
-    
-    select option {
-        padding: 10px;
-    }
-    
-    [data-theme="dark"] select option {
-        background: var(--bg-tertiary);
-    }
-    
-    .hidden {
-        display: none;
-    }
-    
-    .schedule-display {
-        margin-top: 20px;
-        background: var(--bg-tertiary);
-        padding: 15px;
-        border-radius: 10px;
-        border: 2px solid var(--accent-primary);
-        width: 100%;
-        box-sizing: border-box;
-        overflow-x: auto;
-        animation: fadeIn 0.3s ease;
-    }
-    
-    @keyframes fadeIn {
-        from {
-            opacity: 0;
-            transform: translateY(10px);
-        }
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
-    }
-    
-    .schedule-display h3 {
-        margin: 0 0 15px 0;
-        color: var(--accent-primary);
-    }
-    
-    .stats-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-        gap: 15px;
-        margin-bottom: 20px;
-    }
-    
-    .stat-card {
-        background: var(--bg-secondary);
-        padding: 15px;
-        border-radius: 10px;
-        border: 2px solid var(--border-color);
-        text-align: center;
-        transition: all 0.3s ease;
-    }
-    
-    .stat-card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 8px 20px var(--shadow);
-    }
-    
-    .stat-label {
-        font-size: 12px;
-        color: var(--text-secondary);
-        margin-bottom: 8px;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-    }
-    
-    .stat-value {
-        font-size: 24px;
-        font-weight: 700;
-        color: var(--accent-primary);
-    }
-    
-    .stat-card.success .stat-value {
-        color: var(--success);
-    }
-    
-    .stat-card.error .stat-value {
-        color: var(--error);
-    }
-    
-    .schedule-summary {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 15px;
-        margin-bottom: 20px;
-        width: 100%;
-    }
-    
-    .summary-box.diff-box {
-        grid-column: 1 / -1;
-    }
-    
-    .summary-box:nth-child(4),
-    .summary-box:nth-child(5) {
-        /* Eddig ledolgozott és Még hátra van - alsó sor */
-    }
-    
-    .summary-box {
-        background: var(--bg-secondary);
-        padding: 15px;
-        border-radius: 8px;
-        border: 2px solid var(--accent-primary);
-        text-align: center;
-        transition: all 0.3s ease;
-    }
-    
-    .summary-box:hover {
-        transform: translateY(-3px);
-        box-shadow: 0 6px 15px var(--shadow);
-    }
-    
-    .summary-box.positive {
-        border-color: var(--success);
-        background: linear-gradient(135deg, rgba(76, 175, 80, 0.1) 0%, var(--bg-secondary) 100%);
-    }
-    
-    .summary-box.negative {
-        border-color: var(--error);
-        background: linear-gradient(135deg, rgba(244, 67, 54, 0.1) 0%, var(--bg-secondary) 100%);
-    }
-    
-    .summary-label {
-        font-size: 14px;
-        color: var(--text-secondary);
-        margin-bottom: 8px;
-    }
-    
-    .summary-value {
-        font-size: 24px;
-        font-weight: 700;
-        color: var(--text-primary);
-    }
-    
-    .summary-box.positive .summary-value {
-        color: var(--success);
-    }
-    
-    .summary-box.negative .summary-value {
-        color: var(--error);
-    }
-    
-    .schedule-table {
-        width: 100%;
-        border-collapse: collapse;
-        background: var(--bg-secondary);
-        border-radius: 8px;
-        overflow: hidden;
-        font-size: 14px;
-        box-shadow: 0 2px 10px var(--shadow);
-    }
-    
-    .schedule-table th,
-    .schedule-table td {
-        padding: 12px 8px;
-        text-align: center;
-        border-bottom: 1px solid var(--border-color);
-        font-size: 13px;
-        overflow: hidden;
-    }
-    
-    .schedule-table th {
-        background: linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-secondary) 100%);
-        color: white;
-        font-weight: 600;
-        font-size: 13px;
-        position: sticky;
-        top: 0;
-        z-index: 10;
-    }
-    
-    .schedule-table tbody tr {
-        transition: all 0.2s ease;
-    }
-    
-    .schedule-table tbody tr:hover {
-        background: var(--bg-tertiary);
-        transform: scale(1.01);
-    }
-    
-    .schedule-table tbody tr:nth-child(even) {
-        background: var(--bg-tertiary);
-    }
-    
-    .schedule-table tbody tr:nth-child(even):hover {
-        background: var(--bg-tertiary);
-        filter: brightness(1.1);
-    }
-    
-    [data-theme="dark"] .schedule-table tbody tr:hover {
-        filter: brightness(1.2);
-    }
-    
-    [data-theme="dark"] .info-row {
-        border: 1px solid var(--border-color);
-    }
-    
-    [data-theme="dark"] .summary-box {
-        border-color: var(--accent-primary);
-    }
-    
-    [data-theme="dark"] .stat-card {
-        border-color: var(--border-color);
-    }
-    
-    [data-theme="dark"] .schedule-table th {
-        background: linear-gradient(135deg, #5568d3 0%, #764ba2 100%);
-    }
-    
-    [data-theme="dark"] .schedule-table td {
-        color: var(--text-primary);
-    }
-    
-    [data-theme="dark"] .section-header {
-        background: var(--bg-tertiary);
-        color: var(--text-primary);
-    }
-    
-    [data-theme="dark"] select {
-        background: var(--bg-tertiary);
-        color: var(--text-primary);
-        border-color: var(--border-color);
-    }
-    
-    [data-theme="dark"] .upload-area {
-        background: var(--bg-tertiary);
-        border-color: var(--accent-primary);
-    }
-    
-    [data-theme="dark"] .upload-text {
-        color: var(--accent-primary);
-    }
-    
-    [data-theme="dark"] .summary-box.positive {
-        background: linear-gradient(135deg, rgba(111, 209, 149, 0.15) 0%, var(--bg-secondary) 100%);
-    }
-    
-    [data-theme="dark"] .summary-box.negative {
-        background: linear-gradient(135deg, rgba(255, 107, 107, 0.15) 0%, var(--bg-secondary) 100%);
-    }
-    
-    [data-theme="dark"] .info-row[style*="background-color: white"],
-    [data-theme="dark"] .info-row[style*="background-color: #FFFFFF"],
-    [data-theme="dark"] .info-row[style*="background-color: #ffffff"] {
-        background-color: var(--bg-tertiary) !important;
-        color: var(--text-primary) !important;
-    }
-    
-    [data-theme="dark"] .info-row {
-        color: var(--text-primary);
-    }
-    
-    [data-theme="dark"] .j-column-note {
-        color: var(--text-primary) !important;
-    }
-    
-    [data-theme="dark"] .j-column-note[style*="background-color: transparent"] {
-        background-color: var(--bg-tertiary) !important;
-    }
-    
-    .extra-info {
-        margin-top: 20px;
-        background: var(--bg-tertiary);
-        padding: 10px;
-        border-radius: 10px;
-        border-left: 4px solid var(--accent-secondary);
-        width: 100%;
-        box-sizing: border-box;
-    }
-    
-    .info-row {
-        background: var(--bg-secondary);
-        padding: 10px;
-        margin: 5px 0;
-        border-radius: 5px;
-        font-size: 14px;
-        color: var(--text-primary);
-        transition: all 0.2s ease;
-    }
-    
-    .info-row:hover {
-        transform: translateX(5px);
-        box-shadow: 0 2px 8px var(--shadow);
-    }
-    
-    .section-header {
-        font-size: 18px;
-        font-weight: 600;
-        color: var(--text-primary);
-        margin: 20px 0 10px 0;
-        padding: 12px;
-        border-bottom: 2px solid var(--accent-primary);
-        cursor: pointer;
-        user-select: none;
-        background: var(--bg-tertiary);
-        border-radius: 8px;
-        transition: all 0.3s ease;
-        display: flex;
-        align-items: center;
-        gap: 10px;
-    }
-    
-    .section-header:hover {
-        background: var(--bg-tertiary);
-        filter: brightness(0.95);
-        transform: translateX(5px);
-    }
-    
-    .section-header::before {
-        content: '';
-        display: inline-block;
-        width: 0;
-        height: 0;
-        border-left: 6px solid var(--accent-primary);
-        border-top: 4px solid transparent;
-        border-bottom: 4px solid transparent;
-        transition: transform 0.3s ease;
-    }
-    
-    .section-header.collapsed::before {
-        transform: rotate(-90deg);
-    }
-    
-    .collapsible-content {
-        max-height: 5000px;
-        overflow: auto;
-        transition: max-height 0.3s ease, opacity 0.3s ease;
-        opacity: 1;
-    }
-    
-    .collapsible-content.hidden {
-        max-height: 0;
-        opacity: 0;
-    }
-    
-    @media (max-width: 768px) {
-        .container {
-            padding: 10px;
-            margin: 0;
-            border-radius: 0;
-            max-width: 100%;
-        }
-        
-        body {
-            padding: 0;
-        }
-        
-        h1 {
-            font-size: 18px;
-        }
-        
-        .header {
-            margin-bottom: 10px;
-        }
-        
-        .theme-toggle {
-            width: 45px;
-            height: 45px;
-            font-size: 20px;
-        }
-        
-        .upload-area {
-            padding: 15px;
-            margin: 10px 0;
-        }
-        
-        .sort-buttons {
-            flex-direction: column;
-            gap: 8px;
-        }
-        
-        .sort-btn {
-            width: 100%;
-            padding: 14px 20px;
-            font-size: 16px;
-            min-height: 48px;
-        }
-        
-        .view-toggle-btn {
-            padding: 18px 24px;
-            font-size: 17px;
-            min-height: 60px;
-        }
-        
-        select {
-            padding: 16px;
-            font-size: 16px;
-            min-height: 52px;
-        }
-        
-        .stats-grid {
-            grid-template-columns: 1fr;
-            gap: 10px;
-        }
-        
-        .schedule-summary {
-            grid-template-columns: 1fr;
-        }
-        
-        .summary-box.diff-box {
-            grid-column: 1;
-        }
-        
-        .summary-box {
-            padding: 12px;
-            min-height: 80px;
-        }
-        
-        .summary-label {
-            font-size: 13px;
-        }
-        
-        .summary-value {
-            font-size: 20px;
-        }
-        
-        .stat-card {
-            padding: 12px;
-        }
-        
-        .stat-label {
-            font-size: 11px;
-        }
-        
-        .stat-value {
-            font-size: 20px;
-        }
-        
-        .schedule-table {
-            font-size: 12px;
-        }
-        
-        .schedule-table th,
-        .schedule-table td {
-            padding: 10px 5px;
-            font-size: 12px;
-        }
-        
-        .schedule-display {
-            padding: 10px;
-            margin-top: 15px;
-        }
-        
-        .schedule-display h3 {
-            font-size: 16px;
-        }
-        
-        .file-info {
-            padding: 10px;
-            margin-bottom: 10px;
-        }
-        
-        .info-item {
-            font-size: 14px;
-        }
-        
-        /* Naptár mobil optimalizálás */
-        .schedule-table thead tr th {
-            font-size: 10px;
-            padding: 6px 3px;
-        }
-        
-        /* Nagyobb érintési terület a dolgozók listájánál */
-        .info-row {
-            padding: 12px;
-            margin: 8px 0;
-            min-height: 48px;
-        }
-        
-        /* Section headerek nagyobbak */
-        .section-header {
-            padding: 14px;
-            font-size: 16px;
-            min-height: 50px;
-        }
-    }
-    
-    /* Még kisebb képernyőkre (320-480px) */
-    @media (max-width: 480px) {
-        h1 {
-            font-size: 16px;
-        }
-        
-        .summary-value {
-            font-size: 18px;
-        }
-        
-        .stat-value {
-            font-size: 18px;
-        }
-        
-        .schedule-table th,
-        .schedule-table td {
-            padding: 8px 3px;
-            font-size: 11px;
-        }
-    }
-    
-    .loading {
-        display: inline-block;
-        width: 20px;
-        height: 20px;
-        border: 3px solid rgba(255,255,255,.3);
-        border-radius: 50%;
-        border-top-color: #fff;
-        animation: spin 1s ease-in-out infinite;
-    }
-    
-    @keyframes spin {
-        to { transform: rotate(360deg); }
+        --bg-primary:#1a1d29;--bg-secondary:#242837;--bg-tertiary:#2f3447;
+        --text-primary:#ffffff;--text-secondary:#c9d1d9;--border-color:#4a5064;
+        --shadow:rgba(0,0,0,0.5);--accent-primary:#8b9dff;--accent-secondary:#a998ff;
+        --success:#6fd195;--error:#ff6b6b;
+    }
+    *{margin:0;padding:0;box-sizing:border-box;}
+    body{
+        font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif;
+        background:var(--bg-primary);
+        transition:background 0.3s;
+    }
+    .container{
+        background:var(--bg-secondary);
+        padding:15px 20px;
+        border-radius:0;
+        box-shadow:0 10px 40px var(--shadow);
+        margin:0 auto;
+        width:100%;
+        max-width:100%;
+        transition:all 0.3s;
+    }
+    .header{display:flex;justify-content:space-between;align-items:center;margin-bottom:15px;}
+    h1{color:var(--text-primary);text-align:center;margin:0;font-size:24px;flex-grow:1;}
+    .theme-toggle{background:var(--accent-primary);border:none;color:white;width:44px;height:44px;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.3s;box-shadow:0 2px 5px var(--shadow);flex-shrink:0;}
+    .theme-toggle:hover{background:var(--accent-secondary);transform:scale(1.1);}
+
+    .nav-btn{display:flex;align-items:center;justify-content:center;gap:6px;width:100%;padding:12px 8px;color:white;border:none;border-radius:12px;cursor:pointer;font-size:13px;font-weight:700;transition:all 0.3s;min-height:48px;text-decoration:none;text-align:center;line-height:1.3;}
+    .nav-btn:hover{transform:translateY(-3px);}
+
+    #navMenuWrap{position:relative;margin-bottom:12px;}
+    #navMenuBtn{width:100%;padding:13px;background:linear-gradient(135deg,var(--accent-primary),var(--accent-secondary));color:white;border:none;border-radius:14px;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;box-shadow:0 6px 18px var(--shadow);transition:all 0.25s;}
+    #navMenuBtn:hover{transform:translateY(-2px);}
+    #navMenuBtn .navMenuArrow{transition:transform 0.25s;}
+    #navMenuBtn.open .navMenuArrow{transform:rotate(180deg);}
+    #navMenuDropdown{margin-top:8px;display:flex;flex-direction:column;gap:8px;max-height:0;overflow:hidden;opacity:0;transition:max-height 0.3s ease,opacity 0.3s ease,margin-top 0.3s ease;}
+    #navMenuDropdown.open{max-height:680px;opacity:1;}
+
+    #backBtn{width:100%;padding:13px;background:linear-gradient(135deg,#667eea,#764ba2);color:white;border:none;border-radius:14px;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;box-shadow:0 6px 18px rgba(102,126,234,0.35);text-decoration:none;margin-bottom:12px;transition:all 0.25s;}
+    #backBtn:hover{transform:translateY(-2px);}
+
+    .file-info{border-radius:12px;margin-bottom:12px;width:100%;box-sizing:border-box;}
+    .file-info-box{
+        background:var(--bg-tertiary);border:2px solid #ff9800;color:var(--text-primary);
+        padding:9px 16px;border-radius:14px;display:flex;flex-direction:column;gap:6px;align-items:center;
+    }
+    .file-info-title{font-size:15px;font-weight:700;text-align:center;display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap;}
+    .file-info-name{color:#ff9800;font-size:16px;font-weight:900;word-break:break-all;text-align:center;}
+    .file-info-sub{font-size:11px;color:var(--text-secondary);text-align:center;word-break:break-all;}
+    .file-info-box.err{border-color:var(--error);}
+    .file-info-box.err .file-info-name{color:var(--error);}
+    .version-badge{background:#ff9800;color:white;padding:5px 16px;border-radius:10px;font-size:16px;font-weight:900;}
+
+    .select-container{margin:0 0 12px 0;width:100%;}
+    select{width:100%;padding:14px 16px;font-size:16px;border:2px solid var(--border-color);border-radius:12px;background:var(--bg-tertiary);color:var(--text-primary);cursor:pointer;transition:all 0.3s;margin:4px 0;font-weight:600;}
+    select:focus{outline:none;border-color:var(--accent-primary);box-shadow:0 0 0 3px rgba(102,126,234,0.15);}
+
+    #frameOuter{width:100%;padding:0 12px 12px;box-sizing:border-box;background:var(--bg-secondary);}
+    #frameWrap{border-radius:12px;overflow-x:auto;overflow-y:hidden;border:2px solid var(--border-color);background:var(--bg-secondary);}
+    #frame{display:block;width:100%;border:0;background:var(--bg-secondary);min-height:60vh;}
+
+    .helpBtn-yellow{background:linear-gradient(135deg,#ffb300,#ff6f00);font-size:20px;font-weight:900;color:white;}
+
+    @media(max-width:768px){
+        .container{padding:10px;margin:0;border-radius:0;max-width:100%;}
+        h1{font-size:18px;}
+        #frameOuter{padding:0 0 12px;}
     }
 </style>
-```
-
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <h1>📊 Beosztás</h1>
-            <button class="theme-toggle" id="themeToggle" title="Téma váltás">
-                🌙
-            </button>
-        </div>
 
-    <div class="upload-area" id="uploadArea">
-        <div class="upload-icon">
-            📁
-        </div>
-        <div class="upload-text">Kattints vagy húzd ide a fájlt</div>
-        <div class="upload-subtext">Excel fájl (.xlsx, .xls)</div>
-        <input type="file" id="fileInput" accept=".xlsx, .xls" />
+<div class="container">
+    <div class="header">
+        <h1>📊 Táblázat</h1>
+        <button class="theme-toggle helpBtn-yellow" id="helpBtn" title="Használati utasítás" onclick="document.getElementById('helpModal').style.display='flex'" style="margin-right:8px;">?</button>
+        <button class="theme-toggle" id="themeToggle" title="Téma váltás">🌙</button>
     </div>
-    
-    <div id="filenameDisplay" class="filename-display hidden"></div>
 
-    <div id="selectContainer" class="select-container hidden">
-        <div id="fileInfo" class="file-info"></div>
-        
-        <div id="statsSection" class="hidden"></div>
-        
-        <div class="search-container hidden" id="searchContainer">
-            <input type="text" class="search-input" id="searchInput" placeholder="Keresés név alapján...">
-            🔍
+    <div id="todayDateDisplay" style="background:linear-gradient(135deg,#f39c12,#e67e22);color:white;padding:8px 16px;border-radius:14px;font-size:13px;font-weight:700;text-align:center;margin-bottom:12px;"></div>
+
+    <a id="backBtn" href="beosztas.html">⬅ Vissza</a>
+
+    <div id="navMenuWrap">
+        <button id="navMenuBtn" onclick="toggleNavMenu()">
+            <span>☰ Menü</span>
+            <span class="navMenuArrow">▾</span>
+        </button>
+        <div id="navMenuDropdown">
+            <a href="beosztas.html" class="nav-btn" style="background:linear-gradient(135deg,#667eea,#764ba2);box-shadow:0 8px 24px rgba(102,126,234,0.35);">👤 Beosztás (Név nézet)</a>
+            <a href="napi_nezet.html" class="nav-btn" style="background:linear-gradient(135deg,#11998e,#38ef7d);box-shadow:0 8px 24px rgba(17,153,142,0.35);color:#1a1a1a;">📅 Napi nézet</a>
+            <a href="valtozasok.html" class="nav-btn" style="background:linear-gradient(135deg,#ea4335,#fbbc04);box-shadow:0 8px 24px rgba(234,67,53,0.35);color:#222;">🔄 Változások</a>
+            <a href="kiosztatlan.html" class="nav-btn" style="background:linear-gradient(135deg,#e65100,#ff9800);box-shadow:0 8px 24px rgba(230,81,0,0.35);color:white;">⚠️ Kiosztatlan műszak</a>
+            <a href="kollega.html" class="nav-btn" style="background:linear-gradient(135deg,#009688,#26c6da);box-shadow:0 8px 24px rgba(0,150,136,0.35);color:white;">👥 Kolléga egyeztető</a>
+            <a href="eszkozok.html" class="nav-btn" style="background:linear-gradient(135deg,#f7971e,#ffd200);box-shadow:0 8px 24px rgba(247,151,30,0.35);color:#333;">🔧 Eszközök</a>
+            <a href="informaciok.html" class="nav-btn" style="background:linear-gradient(135deg,#5c6bc0,#9c27b0);box-shadow:0 8px 24px rgba(92,107,192,0.35);color:white;">ℹ️ Infó</a>
+            <a href="hasznalati utmutato.html" class="nav-btn" style="background:linear-gradient(135deg,#ffb300,#ff6f00);box-shadow:0 8px 24px rgba(255,179,0,0.35);color:white;">📖 Használati útmutató</a>
+            <a href="javaslat.html" class="nav-btn" style="background:linear-gradient(135deg,#8e24aa,#d81b60);box-shadow:0 8px 24px rgba(142,36,170,0.35);color:white;">💡 Javaslatok</a>
         </div>
-        
-        <div class="sort-buttons">
-            <button class="sort-btn active" id="btnABC">
-                ↑ ABC
-            </button>
-            <button class="sort-btn" id="btnABCReverse">
-                ↓ ABC visszafelé
-            </button>
-            <button class="sort-btn" id="btnOriginal">
-                ≡ Eredeti sorrend
-            </button>
+    </div>
+
+    <div class="file-info">
+        <div id="fileInfoBox" class="file-info-box">
+            <div class="file-info-title">
+                <span>📂 Megnyitott beosztás:</span><span id="fileInfoName" class="file-info-name">Kapcsolódás…</span>
+            </div>
+            <div id="fileInfoSub" class="file-info-sub"></div>
         </div>
-        
-        <select id="nameSelect">
-            <option value="">-- Válassz nevet --</option>
+    </div>
+
+    <div class="select-container">
+        <select id="fileSelect">
+            <option value="">fájlok betöltése…</option>
         </select>
     </div>
+</div>
 
-    <div id="scheduleDisplay" class="schedule-display hidden">
-        <h3 id="selectedNameTitle"></h3>
-        <div id="scheduleContent"></div>
+<div id="frameOuter">
+    <div id="frameWrap">
+        <iframe id="frame"></iframe>
     </div>
+</div>
 
-    <div id="excelView" class="schedule-display hidden" style="margin-top: 20px;">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap: wrap; gap: 10px;">
-            <h3 style="margin: 0;">📊 Excel táblázat</h3>
-            <div style="display: flex; gap: 10px; align-items: center;">
-                <button onclick="zoomOut()" style="padding: 8px 12px; background: var(--bg-secondary); color: var(--text-primary); border: 2px solid var(--border-color); border-radius: 6px; cursor: pointer; font-weight: 600;">−</button>
-                <span id="zoomLevel" style="min-width: 60px; text-align: center; font-weight: 600; color: var(--accent-primary);">50%</span>
-                <button onclick="zoomIn()" style="padding: 8px 12px; background: var(--bg-secondary); color: var(--text-primary); border: 2px solid var(--border-color); border-radius: 6px; cursor: pointer; font-weight: 600;">+</button>
-                <button onclick="resetZoom()" style="padding: 8px 12px; background: var(--bg-secondary); color: var(--text-primary); border: 2px solid var(--border-color); border-radius: 6px; cursor: pointer;">↺ Reset</button>
-            </div>
+<!-- Használati útmutató Modal -->
+<div id="helpModal" onclick="if(event.target===this)this.style.display='none'" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:9999;align-items:flex-start;justify-content:center;padding:16px;overflow-y:auto;">
+    <div onclick="event.stopPropagation()" style="background:var(--bg-secondary);border-radius:20px;padding:24px 20px;max-width:480px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,0.5);margin:auto;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;">
+            <h2 style="color:var(--text-primary);font-size:18px;margin:0;">❓ Használati utasítás</h2>
+            <button onclick="document.getElementById('helpModal').style.display='none'" style="background:var(--bg-tertiary);border:2px solid var(--border-color);color:var(--text-primary);width:36px;height:36px;border-radius:50%;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;">✕</button>
         </div>
-        <!-- Munkalap fülek ide kerülnek dinamikusan -->
-        <div id="excelContent" style="overflow: auto; max-height: 80vh; border: 2px solid var(--border-color); border-radius: 8px; padding: 10px; background: var(--bg-secondary);"></div>
-    </div>
 
-    <div id="results"></div>
-    
-    <!-- Disclaimer -->
-    <div style="margin-top: 40px; padding: 20px; background: var(--bg-tertiary); border-radius: 10px; border-left: 4px solid var(--accent-secondary); text-align: center; font-size: 12px; color: var(--text-secondary); line-height: 1.8;">
-        <p style="margin: 0 0 8px 0;">⚠️ <strong>Fontos tájékoztatás</strong></p>
-        <p style="margin: 0 0 8px 0;">A programozó nem vállal felelősséget az alkalmazás használatából eredő esetleges hibákért, adatvesztésért vagy egyéb károkért.</p>
-        <p style="margin: 0 0 8px 0;">Az alkalmazás nem garantálja az adatok pontosságát és a téves adatokból eredő következményekért sem vállal felelősséget.</p>
-        <p style="margin: 0;">Ez az alkalmazás mesterséges intelligencia (AI) segítségével készült. Az alkalmazás használata kizárólag a felhasználó saját felelősségére történik.</p>
+        <div style="display:flex;flex-direction:column;gap:12px;font-size:14px;color:var(--text-primary);line-height:1.6;">
+
+            <div style="background:var(--bg-tertiary);border-radius:12px;padding:14px;border-left:4px solid #4285f4;">
+                <div style="font-weight:700;margin-bottom:6px;">📊 Táblázat oldal</div>
+                <div style="color:var(--text-secondary);">Ez az oldal a felhőben (Google Drive-ban) elérhető HTML fájlokat listázza, és az kiválasztottat jeleníti meg lent, a nagy nézőablakban.</div>
+            </div>
+
+            <div style="background:var(--bg-tertiary);border-radius:12px;padding:14px;border-left:4px solid #34a853;">
+                <div style="font-weight:700;margin-bottom:6px;">📂 Fájlválasztás</div>
+                <div style="color:var(--text-secondary);">A legördülő listából választhatsz fájlt. Az oldal automatikusan a legfrissebb módosítású fájlt nyitja meg elsőre.</div>
+            </div>
+
+            <div style="background:var(--bg-tertiary);border-radius:12px;padding:14px;border-left:4px solid #667eea;">
+                <div style="font-weight:700;margin-bottom:6px;">⬅ Vissza / ☰ Menü</div>
+                <div style="color:var(--text-secondary);">A „⬅ Vissza" gombbal a Név nézetre (beosztás.html) térsz vissza. A „☰ Menü" gombra kattintva éred el a többi oldalt: Napi nézet, Változások, Kiosztatlan műszak, Kolléga egyeztető, Eszközök, Infó, Használati útmutató, Javaslatok.</div>
+            </div>
+
+            <div style="background:var(--bg-tertiary);border-radius:12px;padding:14px;border-left:4px solid #ff9800;">
+                <div style="font-weight:700;margin-bottom:6px;">🌙 Sötét mód / ☀️ Világos mód</div>
+                <div style="color:var(--text-secondary);">A jobb felső sarokban lévő gombbal válthatsz világos és sötét megjelenés között. A beállítás megmarad a következő látogatásra is.</div>
+            </div>
+
+        </div>
+
+        <button onclick="document.getElementById('helpModal').style.display='none'" style="width:100%;margin-top:18px;padding:13px;background:linear-gradient(135deg,#5c6bc0,#9c27b0);color:white;border:none;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;">✓ Értettem</button>
     </div>
 </div>
 
 <script>
-    let originalNames = [];
-    let currentViewMode = 'names';
-    let allNamesData = [];
-    let currentFileName = '';
-    let currentSelectedPersonRow = null; // Kiválasztott név Excel sora
-    let filteredNames = [];
-    let originalWorkbook = null; // Eredeti Excel fájl tárolása
-    let originalFile = null; // Eredeti fájl blob
-    
-    const uploadArea = document.getElementById('uploadArea');
-    const fileInput = document.getElementById('fileInput');
-    const themeToggle = document.getElementById('themeToggle');
-    const searchInput = document.getElementById('searchInput');
+// ▼ Illeszd be ide a Web App URL-edet (ugyanaz, mint a beosztás.html-ben) ▼
+const PROXY_URL = 'https://script.google.com/macros/s/AKfycbwWaPohTy27KI8SGJtWTtQa0yNTNsOmNahoO5WMpAJ01oy-PaD0j_hYqgQTvqCjgeQm/exec';
+// ▲ Illeszd be ide a Web App URL-edet ▲
 
-    // Téma kezelés
-    const savedTheme = localStorage.getItem('theme') || 'light';
-    document.documentElement.setAttribute('data-theme', savedTheme);
+const CACHE_PREFIX = 'htmlDriveCache:';
+const MAX_CACHED = 8; // legfeljebb ennyi fájl tartalmát tároljuk el
+
+const fileSelect = document.getElementById('fileSelect');
+const frame = document.getElementById('frame');
+const fileInfoBox = document.getElementById('fileInfoBox');
+const fileInfoName = document.getElementById('fileInfoName');
+const fileInfoSub = document.getElementById('fileInfoSub');
+
+const monthsHu={'JAN':'Január','FEB':'Február','MAR':'Március','MÁR':'Március','APR':'Április','ÁPR':'Április','MAJ':'Május','MÁJ':'Május','JUN':'Június','JÚN':'Június','JUL':'Július','JÚL':'Július','AUG':'Augusztus','SZEPT':'Szeptember','SZE':'Szeptember','OKT':'Október','NOV':'November','DEC':'December'};
+
+// Fájlnévből csak év / hónap / verziószám kiolvasása – ugyanúgy, mint a beosztas.html-ben
+function parseFN(fn){
+    const r={year:'-',month:'-',version:'-'};
+    if(!fn) return r;
+    const ym=fn.match(/(\d{4})/);
+    if(ym)r.year=ym[1];
+    const u=fn.toUpperCase();
+    const keys=Object.keys(monthsHu).sort((a,b)=>b.length-a.length);
+    for(const kw of keys){ if(u.includes(kw)){ r.month=monthsHu[kw]; break; } }
+    const vm=fn.match(/(?:ver|version|v)\s*(\d+)/i);
+    if(vm)r.version='v'+vm[1];
+    return r;
+}
+
+// name = a nyers fájlnév (vagy státusz szöveg, ha isRaw=true), sub = kis kiegészítő szöveg
+function setStatus(name, sub, isErr, isRaw){
+    if(isRaw){
+        fileInfoName.textContent = name;
+        fileInfoName.classList.remove('with-badge');
+        fileInfoName.style.fontSize = '';
+    }else{
+        const fd = parseFN(name);
+        fileInfoName.textContent = `${fd.year} ${fd.month}`.trim();
+        fileInfoName.style.fontSize = '19px';
+        // verzió jelvény hozzáadása/eltávolítása
+        let badge = fileInfoBox.querySelector('.version-badge');
+        if(fd.version !== '-'){
+            if(!badge){
+                badge = document.createElement('span');
+                badge.className = 'version-badge';
+                fileInfoName.insertAdjacentElement('afterend', badge);
+            }
+            badge.textContent = fd.version;
+        }else if(badge){
+            badge.remove();
+        }
+    }
+    fileInfoSub.textContent = sub || '';
+    fileInfoBox.classList.toggle('err', !!isErr);
+}
+
+// ---- Mai dátum kijelzése (mint a beosztas.html-ben) ----
+(function(){
+    const todayD = new Date();
+    const mnD = ['január','február','március','április','május','június','július','augusztus','szeptember','október','november','december'];
+    const dnD = ['vasárnap','hétfő','kedd','szerda','csütörtök','péntek','szombat'];
+    const soyD = new Date(todayD.getFullYear(), 0, 1);
+    const wnD = Math.ceil((Math.floor((todayD - soyD) / 86400000) + soyD.getDay() + 1) / 7);
+    const el = document.getElementById('todayDateDisplay');
+    if(el) el.textContent = `📅 ${todayD.getFullYear()}. ${mnD[todayD.getMonth()]} ${todayD.getDate()}, ${dnD[todayD.getDay()]} – ${wnD}. hét`;
+})();
+
+// ---- Hamburger menü (mint a beosztas.html-ben) ----
+function toggleNavMenu(){
+    const dd = document.getElementById('navMenuDropdown');
+    const btn = document.getElementById('navMenuBtn');
+    dd.classList.toggle('open');
+    btn.classList.toggle('open');
+}
+document.addEventListener('click', e => {
+    const wrap = document.getElementById('navMenuWrap');
+    if(wrap && !wrap.contains(e.target)){
+        document.getElementById('navMenuDropdown').classList.remove('open');
+        document.getElementById('navMenuBtn').classList.remove('open');
+    }
+});
+
+// ---- Téma ----
+const savedTheme = localStorage.getItem('theme') || 'light';
+document.documentElement.setAttribute('data-theme', savedTheme);
+updateThemeIcon();
+document.getElementById('themeToggle').addEventListener('click', () => {
+    const cur = document.documentElement.getAttribute('data-theme');
+    const next = cur === 'light' ? 'dark' : 'light';
+    document.documentElement.setAttribute('data-theme', next);
+    localStorage.setItem('theme', next);
     updateThemeIcon();
+});
+function updateThemeIcon(){
+    document.getElementById('themeToggle').textContent = document.documentElement.getAttribute('data-theme') === 'light' ? '🌙' : '☀️';
+}
 
-    themeToggle.addEventListener('click', () => {
-        const current = document.documentElement.getAttribute('data-theme');
-        const newTheme = current === 'light' ? 'dark' : 'light';
-        document.documentElement.setAttribute('data-theme', newTheme);
-        localStorage.setItem('theme', newTheme);
-        updateThemeIcon();
+// ---- localStorage cache segédfüggvények ----
+
+function getCacheIndex(){
+  try{ return JSON.parse(localStorage.getItem(CACHE_PREFIX + 'index') || '[]'); }
+  catch(e){ return []; }
+}
+
+function setCacheIndex(index){
+  try{ localStorage.setItem(CACHE_PREFIX + 'index', JSON.stringify(index)); }
+  catch(e){}
+}
+
+function getCachedContent(fileId){
+  try{
+    const raw = localStorage.getItem(CACHE_PREFIX + fileId);
+    return raw ? JSON.parse(raw) : null; // {name, modifiedTime, content}
+  }catch(e){ return null; }
+}
+
+function setCachedContent(fileId, entry){
+  try{
+    let index = getCacheIndex().filter(id => id !== fileId);
+    index.unshift(fileId);
+    // Csak az utolsó N fájlt tartjuk cache-ben, a többit dobjuk
+    const removed = index.slice(MAX_CACHED);
+    index = index.slice(0, MAX_CACHED);
+    removed.forEach(id => localStorage.removeItem(CACHE_PREFIX + id));
+    localStorage.setItem(CACHE_PREFIX + fileId, JSON.stringify(entry));
+    setCacheIndex(index);
+  }catch(e){
+    // Ha betelt a tárhely, próbáljuk törölni a legrégebbi cache-elt fájlt és újra
+    try{
+      let index = getCacheIndex();
+      if(index.length > 1){
+        const oldest = index.pop();
+        localStorage.removeItem(CACHE_PREFIX + oldest);
+        setCacheIndex(index);
+        setCachedContent(fileId, entry);
+      }
+    }catch(e2){}
+  }
+}
+
+// ---- Fájllista betöltése ----
+
+async function loadFileList(){
+  fileSelect.innerHTML = '<option value="">fájlok betöltése…</option>';
+  setStatus('Kapcsolódás…', 'HTML fájlok listázása…', false, true);
+  try{
+    const res = await fetch(PROXY_URL + '?action=listHtml');
+    if(!res.ok) throw new Error('HTTP ' + res.status);
+    const data = await res.json();
+    if(data.error) throw new Error(data.error);
+    const files = data.files || [];
+
+    if(files.length === 0){
+      fileSelect.innerHTML = '<option value="">nincs HTML fájl a Masbeo-HTML mappában</option>';
+      setStatus('Nincs elérhető fájl', 'Nem található HTML fájl.', true, true);
+      return;
+    }
+
+    // Legfrissebb módosítású elöl
+    files.sort((a, b) => new Date(b.modifiedTime) - new Date(a.modifiedTime));
+
+    fileSelect.innerHTML = '<option value="">— válassz fájlt —</option>' +
+      files.map(f => `<option value="${f.id}" data-name="${f.name}" data-modified="${f.modifiedTime}">${f.name}</option>`).join('');
+
+    // Automatikusan a legfrissebb (legutóbb módosított) fájlt nyitjuk meg
+    const latest = files[0];
+    fileSelect.value = latest.id;
+    loadFileContent(latest.id, latest.name, latest.modifiedTime);
+  }catch(err){
+    console.error(err);
+    fileSelect.innerHTML = '<option value="">hiba történt</option>';
+    setStatus('Hiba', 'Hiba a fájllista lekérésekor: ' + err.message, true, true);
+  }
+}
+
+// ---- Javítás a betöltött oldalak görgetéséhez, + oszlop- és sorkiemelés a táblázatokon ----
+// (A táblázatok szélességét NEM módosítjuk – az eredeti méretében jelenik meg.)
+// Bármelyik cellára kattintva kiemelhető/elrejthető az adott oszlop ÉS sor (kereszt-kiemelés),
+// és az aznapi dátumnak megfelelő oszlop automatikusan is kiemelésre kerül.
+// A vizuális oszlopot colspan/rowspan-t is figyelembe véve számoljuk, nem csak a nyers cellIndex-szel,
+// mert összevont cellák esetén a puszta cellIndex nem feltétlenül ugyanazt az oszlopot jelöli minden sorban.
+function injectMobileTableFix(html){
+  if(!html) return html;
+  const fixStyle = '<style>' +
+    '[style*="overflow"]{-webkit-overflow-scrolling:touch!important;}' +
+    '.today-col-highlighted{box-shadow:inset 0 0 0 3px rgba(46,125,50,0.9)!important;}' +
+    '.col-highlighted{box-shadow:inset 0 0 0 2px rgba(255,160,0,0.9)!important;}' +
+    '.row-highlighted{box-shadow:inset 0 0 0 2px rgba(33,150,243,0.9)!important;}' +
+    '.cell-active{outline:3px solid #ff5722!important;outline-offset:-3px;}' +
+    '</style>';
+  const fixScript = '<script>(function(){' +
+    'function clearHl(table){' +
+      'table.querySelectorAll(".col-highlighted,.row-highlighted,.cell-active").forEach(function(c){' +
+        'c.classList.remove("col-highlighted","row-highlighted","cell-active");' +
+      '});' +
+    '}' +
+    'function computeColMap(table){' +
+      'var rows=table.rows,colMap=[],pending={};' +
+      'for(var r=0;r<rows.length;r++){' +
+        'var cells=rows[r].cells,col=0,rowMap=[],nextPending={};' +
+        'for(var ci=0;ci<cells.length;ci++){' +
+          'while(pending[col]){col++;}' +
+          'rowMap[ci]=col;' +
+          'var cs=cells[ci].colSpan||1,rs=cells[ci].rowSpan||1;' +
+          'if(rs>1){for(var cc=col;cc<col+cs;cc++){nextPending[cc]=rs-1;}}' +
+          'col+=cs;' +
+        '}' +
+        'colMap[r]=rowMap;' +
+        'var merged={};' +
+        'for(var k in pending){if(pending[k]>1){merged[k]=pending[k]-1;}}' +
+        'for(var k2 in nextPending){merged[k2]=Math.max(merged[k2]||0,nextPending[k2]);}' +
+        'pending=merged;' +
+      '}' +
+      'return colMap;' +
+    '}' +
+    'function getColMap(table){' +
+      'if(!table.__colMap)table.__colMap=computeColMap(table);' +
+      'return table.__colMap;' +
+    '}' +
+    'function highlightColRow(table,colStart,colEnd,rowIdx,activeCell){' +
+      'var rows=table.rows,colMap=getColMap(table);' +
+      'for(var r=0;r<rows.length;r++){' +
+        'var cells=rows[r].cells,map=colMap[r]||[];' +
+        'for(var ci=0;ci<cells.length;ci++){' +
+          'var cs=cells[ci].colSpan||1,cStart=map[ci],cEnd=cStart+cs-1;' +
+          'if(cEnd>=colStart&&cStart<=colEnd)cells[ci].classList.add("col-highlighted");' +
+        '}' +
+      '}' +
+      'var rowCells=rows[rowIdx]?rows[rowIdx].cells:[];' +
+      'for(var i=0;i<rowCells.length;i++){rowCells[i].classList.add("row-highlighted");}' +
+      'if(activeCell)activeCell.classList.add("cell-active");' +
+    '}' +
+    'function initColHl(){' +
+      'document.querySelectorAll("table").forEach(function(table){' +
+        'table.__colMap=null;' +
+        'var colMap=getColMap(table);' +
+        'table.querySelectorAll("td,th").forEach(function(cell){' +
+          'if(cell.dataset.colHl==="1")return;' +
+          'cell.dataset.colHl="1";' +
+          'cell.style.cursor="pointer";' +
+          'cell.addEventListener("click",function(){' +
+            'var rowIdx=cell.parentElement.rowIndex;' +
+            'var ci=cell.cellIndex;' +
+            'var map=getColMap(table)[rowIdx]||[];' +
+            'var colStart=map[ci];' +
+            'var wasActive=cell.classList.contains("cell-active");' +
+            'clearHl(table);' +
+            'if(!wasActive&&colStart!==undefined){' +
+              'var cs=cell.colSpan||1;' +
+              'highlightColRow(table,colStart,colStart+cs-1,rowIdx,cell);' +
+            '}' +
+          '});' +
+        '});' +
+        'if(table.dataset.autoHl!=="1"){' +
+          'table.dataset.autoHl="1";' +
+          'autoHighlightToday(table);' +
+        '}' +
+      '});' +
+    '}' +
+    'function markTodayColumn(table,colStart,colEnd){' +
+      'var rows=table.rows,colMap=getColMap(table);' +
+      'for(var r=0;r<rows.length;r++){' +
+        'var cells=rows[r].cells,map=colMap[r]||[];' +
+        'for(var ci=0;ci<cells.length;ci++){' +
+          'var cs=cells[ci].colSpan||1,cStart=map[ci],cEnd=cStart+cs-1;' +
+          'if(cEnd>=colStart&&cStart<=colEnd)cells[ci].classList.add("today-col-highlighted");' +
+        '}' +
+      '}' +
+    '}' +
+    'function autoHighlightToday(table){' +
+      'var d=new Date(),day=d.getDate();' +
+      'var rows=table.rows,colMap=getColMap(table),matchedCell=null,matchedCol=-1;' +
+      'for(var r=0;r<rows.length&&!matchedCell;r++){' +
+        'var cells=rows[r].cells,map=colMap[r]||[];' +
+        'for(var c=0;c<cells.length;c++){' +
+          'var t=(cells[c].textContent||"").trim();' +
+          'var m=t.match(/^(\\d{1,2})(?:[-.]|$)/);' +
+          'if(m&&parseInt(m[1],10)===day){matchedCell=cells[c];matchedCol=map[c];break;}' +
+        '}' +
+      '}' +
+      'if(matchedCell){' +
+        'var cs=matchedCell.colSpan||1;' +
+        'markTodayColumn(table,matchedCol,matchedCol+cs-1);' +
+      '}' +
+    '}' +
+    'if(document.readyState==="loading"){document.addEventListener("DOMContentLoaded",initColHl);}else{initColHl();}' +
+    'var _n=0,_iv=setInterval(function(){initColHl();if(++_n>30)clearInterval(_iv);},500);' +
+    '})();<\/script>';
+  if(/<head[^>]*>/i.test(html)){
+    html = html.replace(/<head([^>]*)>/i, '<head$1>' + fixStyle);
+  } else if(/<html[^>]*>/i.test(html)){
+    html = html.replace(/<html([^>]*)>/i, '<html$1><head>' + fixStyle + '</head>');
+  } else {
+    html = fixStyle + html;
+  }
+  // A LEGUTOLSÓ "</body>" előfordulás elé szúrjuk be (nem az elsőbe!) – egyes
+  // fájlok saját JS kódja (pl. JPG-mentés előnézeti ablak) szó szerint
+  // tartalmazhat egy "</body>" szöveget egy string literálban, ami korábban
+  // (elsőt keresve) tévesen ott törte ketté a fájl saját scriptjét.
+  const lower = html.toLowerCase();
+  const lastBodyIdx = lower.lastIndexOf('</body>');
+  if(lastBodyIdx !== -1){
+    html = html.slice(0, lastBodyIdx) + fixScript + html.slice(lastBodyIdx);
+  } else {
+    html = html + fixScript;
+  }
+  return html;
+}
+
+// ---- Iframe tartalom betöltése ----
+// Blob-URL-lel navigáltatjuk az iframe-et (nem srcdoc-kal), mert a srcdoc-os
+// beágyazás mobil böngészőkben sokszor nem veszi figyelembe a betöltött oldal
+// saját <meta name="viewport"> tagjét, emiatt egy szélesebb (asztali) elrendezést
+// próbál a keskeny iframe-be belezsugorítani – ez okozza az "összenyomódást".
+// Egy valódi Blob-URL-es navigációnál a beágyazott oldal saját viewportja helyesen érvényesül.
+let currentFrameUrl = null;
+function loadFrameContent(html){
+  try{
+    if(currentFrameUrl) URL.revokeObjectURL(currentFrameUrl);
+    const fixed = injectMobileTableFix(html);
+    const blob = new Blob([fixed || ''], {type:'text/html'});
+    currentFrameUrl = URL.createObjectURL(blob);
+    frame.src = currentFrameUrl;
+  }catch(e){
+    // Ha valamiért nem elérhető a Blob API, essünk vissza a régi módszerre
+    frame.srcdoc = injectMobileTableFix(html) || '';
+  }
+}
+
+// ---- Fájltartalom betöltése (cache-elve, csak új verzió esetén tölt le) ----
+
+async function loadFileContent(fileId, fileName, modifiedTime){
+  const cached = getCachedContent(fileId);
+
+  // Ha van cache-elt verzió és nem változott a módosítás dátuma, onnan töltjük be – nincs hálózati kérés
+  if(cached && modifiedTime && cached.modifiedTime === modifiedTime){
+    loadFrameContent(cached.content);
+    setStatus(cached.name, 'Mentett verzió, nincs új adatforgalom.');
+    return;
+  }
+
+  setStatus(fileName || '', 'Letöltés…');
+  try{
+    const res = await fetch(PROXY_URL + '?action=getHtml&id=' + encodeURIComponent(fileId));
+    if(!res.ok) throw new Error('HTTP ' + res.status);
+    const data = await res.json();
+    if(data.error) throw new Error(data.error);
+
+    loadFrameContent(data.content);
+    setCachedContent(fileId, {
+      name: data.name,
+      modifiedTime: modifiedTime || null,
+      content: data.content || ''
     });
+    setStatus(data.name, 'Frissen letöltve.');
+  }catch(err){
+    console.error(err);
+    // Ha a letöltés meghiúsul, de van régebbi cache-elt verzió, inkább azt mutassuk semmi helyett
+    if(cached){
+      loadFrameContent(cached.content);
+      setStatus(cached.name, 'Nem sikerült frissíteni, régebbi mentett verzió jelenik meg: ' + err.message, true);
+    }else{
+      loadFrameContent('');
+      setStatus('Hiba', 'Hiba a fájl betöltésekor: ' + err.message, true, true);
+    }
+  }
+}
 
-    function updateThemeIcon() {
-        const theme = document.documentElement.getAttribute('data-theme');
-        themeToggle.textContent = theme === 'light' ? '🌙' : '☀️';
-    }
+// ---- iframe magasságának igazítása a tartalomhoz ----
+// Így a teljes oldal (fenti menüvel együtt) egyben görgethető, az iframe-nek
+// nincs saját belső görgetősávja.
+let frameResizeTimer = null;
+function resizeFrame(){
+  try{
+    const doc = frame.contentDocument || frame.contentWindow.document;
+    const de = doc.documentElement, bd = doc.body;
+    const h = Math.max(de ? de.scrollHeight : 0, bd ? bd.scrollHeight : 0);
+    if(h > 0) frame.style.height = h + 'px';
+  }catch(e){ /* cross-origin esetén nem tudjuk lekérni – marad az alapértelmezett magasság */ }
+}
 
-    uploadArea.addEventListener('click', () => fileInput.click());
-    
-    uploadArea.addEventListener('dragover', (e) => {
-        e.preventDefault();
-        uploadArea.style.transform = 'scale(1.02)';
-    });
-    
-    uploadArea.addEventListener('dragleave', () => {
-        uploadArea.style.transform = 'scale(1)';
-    });
-    
-    uploadArea.addEventListener('drop', (e) => {
-        e.preventDefault();
-        uploadArea.style.transform = 'scale(1)';
-        const files = e.dataTransfer.files;
-        if (files.length > 0) {
-            fileInput.files = files;
-            handleFile({ target: fileInput });
-        }
-    });
+frame.addEventListener('load', () => {
+  resizeFrame();
+  clearInterval(frameResizeTimer);
+  // Az iframe tartalma dinamikusan is változhat (lenyíló szekciók, modalok stb.),
+  // ezért rendszeresen újramérjük a magasságát.
+  frameResizeTimer = setInterval(resizeFrame, 600);
+  try{
+    const doc = frame.contentDocument || frame.contentWindow.document;
+    if(window.ResizeObserver && doc.documentElement){
+      const ro = new ResizeObserver(() => resizeFrame());
+      ro.observe(doc.documentElement);
+    }
+  }catch(e){}
+});
+window.addEventListener('resize', resizeFrame);
 
-    fileInput.addEventListener('change', handleFile);
+fileSelect.addEventListener('change', () => {
+  const opt = fileSelect.selectedOptions[0];
+  if(opt && opt.value){
+    loadFileContent(opt.value, opt.dataset.name, opt.dataset.modified);
+  }
+});
 
-    function handleFile(e) {
-        const file = e.target.files[0];
-        if (!file) return;
-        
-        const fileName = file.name;
-        
-        const filenameDisplay = document.getElementById('filenameDisplay');
-        filenameDisplay.textContent = fileName.toLowerCase();
-        filenameDisplay.classList.remove('hidden');
+document.addEventListener('keydown', e => {
+  if(e.key === 'Escape'){
+    document.getElementById('helpModal').style.display = 'none';
+  }
+});
 
-        const reader = new FileReader();
-
-        reader.onload = function(e) {
-            try {
-                const data = new Uint8Array(e.target.result);
-                const workbook = XLSX.read(data, {
-                    type: 'array',
-                    cellStyles: true
-                });
-                
-                // Eredeti fájl és workbook tárolása
-                originalWorkbook = workbook;
-                originalFile = file;
-                
-                const allNames = [];
-                let globalOrderIndex = 0;
-                
-                workbook.SheetNames.forEach(sheetName => {
-                    const sheet = workbook.Sheets[sheetName];
-                    const namesWithSchedule = getNamesFromSheet(sheet, globalOrderIndex);
-                    globalOrderIndex += namesWithSchedule.length;
-                    allNames.push(...namesWithSchedule);
-                });
-                
-                displayNames(allNames, fileName);
-                
-                document.getElementById('selectContainer').classList.remove('hidden');
-                
-                uploadArea.classList.add('compact');
-                
-                
-                
-            } catch (error) {
-                document.getElementById('results').textContent = 
-                    'Hiba történt a fájl beolvasása során: ' + error.message;
-            }
-        };
-
-        reader.readAsArrayBuffer(file);
-    }
-
-    function getNamesFromSheet(sheet, startOrderIndex = 0) {
-        const namesWithSchedule = [];
-        let startRow = 9;
-        let orderIndex = startOrderIndex;
-        
-        while (startRow <= 1000) {
-            const cellA = sheet[`A${startRow}`];
-            const nameA = cellA ? cellA.v : '';
-            
-            // Háttérszín kiolvasása
-            let nameColor = null;
-            if (cellA && cellA.s) {
-                if (cellA.s.fgColor && cellA.s.fgColor.rgb) {
-                    nameColor = cellA.s.fgColor.rgb;
-                } else if (cellA.s.bgColor && cellA.s.bgColor.rgb) {
-                    nameColor = cellA.s.bgColor.rgb;
-                } else if (cellA.s.patternType && cellA.s.patternType !== 'none') {
-                    if (cellA.s.patternFg && cellA.s.patternFg.rgb) {
-                        nameColor = cellA.s.patternFg.rgb;
-                    }
-                }
-            }
-            
-            // Csak A oszlopot olvassuk, B oszlopot kihagyjuk
-            // Üres és csak szóköz tartalmú nevek kihagyása
-            if (nameA && nameA.trim() !== '') {
-                const schedule = getScheduleForRow(sheet, startRow);
-                const extraInfo = getExtraInfoForRow(sheet, startRow);
-                namesWithSchedule.push({
-                    name: nameA.trim(),
-                    schedule: schedule,
-                    extraInfo: extraInfo,
-                    originalIndex: orderIndex++,
-                    excelRow: startRow,
-                    column: 'A',
-                    nameColor: nameColor
-                });
-            }
-            
-            // 4 sorral lejjebb ugrunk (A9 -> A13 -> A17 -> A21...)
-            startRow += 4;
-        }
-        
-        return namesWithSchedule;
-    }
-
-    function getScheduleForRow(sheet, row) {
-        const days = [];
-        const startCol = 10;
-        
-        for (let colIndex = startCol; colIndex < startCol + 50; colIndex++) {
-            const col = getColumnName(colIndex);
-            const dayCell = sheet[`${col}7`];
-            const dateCell = sheet[`${col}8`];
-            const dayName = dayCell ? dayCell.v : '';
-            const date = dateCell ? dateCell.v : '';
-            
-            if (!dayName) break;
-            
-            const start1Cell = sheet[`${col}${row}`];
-            const end1Cell = sheet[`${col}${row + 1}`];
-            const start2Cell = sheet[`${col}${row + 2}`];
-            const end2Cell = sheet[`${col}${row + 3}`];
-            
-            const start1 = start1Cell ? start1Cell.v : '';
-            const end1 = end1Cell ? end1Cell.v : '';
-            const start2 = start2Cell ? start2Cell.v : '';
-            const end2 = end2Cell ? end2Cell.v : '';
-            
-            // Megjegyzések beolvasása (Excel comments)
-            let dayComment = '';
-            // Próbálunk megjegyzést találni bármelyik cellában (start1, end1, start2, end2)
-            [start1Cell, end1Cell, start2Cell, end2Cell].forEach(cell => {
-                if (cell && cell.c && cell.c.length > 0) {
-                    const comment = cell.c.map(c => c.t || c.a).filter(t => t).join('\n');
-                    if (comment && !dayComment) {
-                        dayComment = comment;
-                    }
-                }
-            });
-            
-            // Színek beolvasása - RGB, theme, indexed
-            let start1Color = null;
-            if (start1Cell && start1Cell.s) {
-                const s = start1Cell.s;
-                
-                // 1. fgColor RGB (amikor patternType: solid, ez a háttérszín!)
-                if (s.fgColor && s.fgColor.rgb) {
-                    start1Color = s.fgColor.rgb;
-                }
-                // 2. fgColor theme (téma alapú szín)
-                else if (s.fgColor && s.fgColor.theme !== undefined) {
-                    // Excel theme colors (közelítő RGB értékek)
-                    const themeColors = {
-                        0: 'FFFFFF', // Fehér
-                        1: '000000', // Fekete
-                        2: 'E7E6E6', // Szürke
-                        3: '44546A', // Sötét szürke
-                        4: '4472C4', // Kék
-                        5: 'ED7D31', // Narancs
-                        6: 'A5A5A5', // Világos szürke
-                        7: 'FFC000', // Sárga
-                        8: '5B9BD5', // Világos kék
-                        9: '70AD47'  // Zöld
-                    };
-                    start1Color = themeColors[s.fgColor.theme] || 'FFFFFF';
-                    
-                    // Tint alkalmazása (világosabb/sötétebb árnyalat)
-                    if (s.fgColor.tint && s.fgColor.tint !== 0) {
-                        start1Color = applyTint(start1Color, s.fgColor.tint);
-                    }
-                }
-                // 3. bgColor RGB
-                else if (s.bgColor && s.bgColor.rgb) {
-                    start1Color = s.bgColor.rgb;
-                }
-                // 4. bgColor indexed
-                else if (s.bgColor && s.bgColor.indexed !== undefined) {
-                    const indexedColors = {
-                        64: 'FFFFFF', // Fehér (default)
-                        65: 'FFFFFF'  // Fehér
-                    };
-                    start1Color = indexedColors[s.bgColor.indexed] || null;
-                }
-                // 5. patternFg RGB
-                else if (s.patternFg && s.patternFg.rgb) {
-                    start1Color = s.patternFg.rgb;
-                }
-                // 6. fill.fgColor RGB
-                else if (s.fill && s.fill.fgColor && s.fill.fgColor.rgb) {
-                    start1Color = s.fill.fgColor.rgb;
-                }
-                // 7. fill.bgColor RGB
-                else if (s.fill && s.fill.bgColor && s.fill.bgColor.rgb) {
-                    start1Color = s.fill.bgColor.rgb;
-                }
-            }
-            
-            let end1Color = null;
-            if (end1Cell && end1Cell.s) {
-                const s = end1Cell.s;
-                if (s.fgColor && s.fgColor.rgb) {
-                    end1Color = s.fgColor.rgb;
-                } else if (s.fgColor && s.fgColor.theme !== undefined) {
-                    const themeColors = {
-                        0: 'FFFFFF', 1: '000000', 2: 'E7E6E6', 3: '44546A', 4: '4472C4',
-                        5: 'ED7D31', 6: 'A5A5A5', 7: 'FFC000', 8: '5B9BD5', 9: '70AD47'
-                    };
-                    end1Color = themeColors[s.fgColor.theme] || 'FFFFFF';
-                    if (s.fgColor.tint && s.fgColor.tint !== 0) {
-                        end1Color = applyTint(end1Color, s.fgColor.tint);
-                    }
-                } else if (s.bgColor && s.bgColor.rgb) {
-                    end1Color = s.bgColor.rgb;
-                } else if (s.patternFg && s.patternFg.rgb) {
-                    end1Color = s.patternFg.rgb;
-                } else if (s.fill && s.fill.fgColor && s.fill.fgColor.rgb) {
-                    end1Color = s.fill.fgColor.rgb;
-                } else if (s.fill && s.fill.bgColor && s.fill.bgColor.rgb) {
-                    end1Color = s.fill.bgColor.rgb;
-                }
-            }
-            
-            days.push({
-                day: dayName,
-                date: date,
-                start1: start1,
-                end1: end1,
-                start2: start2,
-                end2: end2,
-                color: start1Color || end1Color,
-                start1Color: start1Color,
-                end1Color: end1Color,
-                comment: dayComment
-            });
-        }
-        
-        return days;
-    }
-
-    function getExtraInfoForRow(sheet, row) {
-        const data = [];
-        const columns = ['C', 'D', 'E', 'F', 'G', 'H', 'I'];
-        
-        // 4 sort olvasunk be (C9-C12, C13-C16, stb.)
-        for (let i = 0; i < 4; i++) {
-            const rowData = {};
-            columns.forEach(col => {
-                const cell = sheet[`${col}${row + i}`];
-                const cellValue = cell ? cell.v : '';
-                
-                // MEGJEGYZÉS olvasása (Excel comment/note)
-                let cellComment = '';
-                if (cell && cell.c && cell.c.length > 0) {
-                    // cell.c az Excel comment array
-                    cellComment = cell.c.map(c => c.t || c.a).filter(t => t).join('\n');
-                }
-                
-                let cellColor = null;
-                if (cell && cell.s) {
-                    // RGB formátum
-                    if (cell.s.fgColor && cell.s.fgColor.rgb) {
-                        cellColor = cell.s.fgColor.rgb;
-                    } 
-                    // Theme formátum
-                    else if (cell.s.fgColor && cell.s.fgColor.theme !== undefined) {
-                        const themeColors = {
-                            0: 'FFFFFF', 1: '000000', 2: 'E7E6E6', 3: '44546A', 4: '4472C4',
-                            5: 'ED7D31', 6: 'A5A5A5', 7: 'FFC000', 8: '5B9BD5', 9: '70AD47'
-                        };
-                        cellColor = themeColors[cell.s.fgColor.theme] || 'FFFFFF';
-                        if (cell.s.fgColor.tint && cell.s.fgColor.tint !== 0) {
-                            cellColor = applyTint(cellColor, cell.s.fgColor.tint);
-                        }
-                    }
-                    else if (cell.s.bgColor && cell.s.bgColor.rgb) {
-                        cellColor = cell.s.bgColor.rgb;
-                    }
-                    else if (cell.s.patternFg && cell.s.patternFg.rgb) {
-                        cellColor = cell.s.patternFg.rgb;
-                    }
-                }
-                
-                rowData[col] = { value: cellValue, color: cellColor, comment: cellComment };
-            });
-            data.push(rowData);
-        }
-        
-        const jData = [];
-        let employeeIdFromComment = '';
-        
-        for (let i = 0; i < 4; i++) {
-            const cell = sheet[`J${row + i}`];
-            const cellValue = cell ? cell.v : '';
-            
-            let cellColor = null;
-            if (cell && cell.s) {
-                // RGB formátum
-                if (cell.s.fgColor && cell.s.fgColor.rgb) {
-                    cellColor = cell.s.fgColor.rgb;
-                }
-                // Theme formátum
-                else if (cell.s.fgColor && cell.s.fgColor.theme !== undefined) {
-                    const themeColors = {
-                        0: 'FFFFFF', 1: '000000', 2: 'E7E6E6', 3: '44546A', 4: '4472C4',
-                        5: 'ED7D31', 6: 'A5A5A5', 7: 'FFC000', 8: '5B9BD5', 9: '70AD47'
-                    };
-                    cellColor = themeColors[cell.s.fgColor.theme] || 'FFFFFF';
-                    if (cell.s.fgColor.tint && cell.s.fgColor.tint !== 0) {
-                        cellColor = applyTint(cellColor, cell.s.fgColor.tint);
-                    }
-                }
-                else if (cell.s.bgColor && cell.s.bgColor.rgb) {
-                    cellColor = cell.s.bgColor.rgb;
-                }
-                else if (cell.s.patternFg && cell.s.patternFg.rgb) {
-                    cellColor = cell.s.patternFg.rgb;
-                }
-            }
-            
-            if (i === 0 && cell) {
-                try {
-                    if (cell.c && cell.c[0] && cell.c[0].t) {
-                        employeeIdFromComment = cell.c[0].t;
-                    }
-                } catch (err) {}
-            }
-            
-            if (cellValue && cellValue.trim && cellValue.trim() !== '') {
-                jData.push({ value: cellValue, color: cellColor });
-            }
-        }
-        
-        const avayColumns = ['AV', 'AW', 'AX', 'AY'];
-        let yearMonth = { year: '', month: '' };
-        
-        for (let i = 0; i < 4; i++) {
-            avayColumns.forEach(col => {
-                const cell = sheet[`${col}${row + i}`];
-                const cellValue = cell ? cell.v : '';
-                
-                if (cellValue && typeof cellValue === 'string') {
-                    const yearMatch = cellValue.match(/\b(20\d{2})\b/);
-                    if (yearMatch && !yearMonth.year) {
-                        yearMonth.year = yearMatch[1];
-                    }
-                    
-                    const months = {
-                        'JANUÁR': 'Január', 'FEBRUÁR': 'Február', 'MÁRCIUS': 'Március', 
-                        'ÁPRILIS': 'Április', 'MÁJUS': 'Május', 'JÚNIUS': 'Június',
-                        'JÚLIUS': 'Július', 'AUGUSZTUS': 'Augusztus', 'SZEPTEMBER': 'Szeptember',
-                        'OKTÓBER': 'Október', 'NOVEMBER': 'November', 'DECEMBER': 'December'
-                    };
-                    
-                    const upperValue = cellValue.toUpperCase();
-                    for (let [key, value] of Object.entries(months)) {
-                        if (upperValue.includes(key)) {
-                            yearMonth.month = value;
-                            break;
-                        }
-                    }
-                }
-            });
-        }
-        
-        const atayData = [];
-        const atayColumns = ['AT', 'AU', 'AV', 'AW', 'AX', 'AY'];
-        
-        for (let rowNum = 1; rowNum <= 3; rowNum++) {
-            atayColumns.forEach(col => {
-                const cell = sheet[`${col}${rowNum}`];
-                const cellValue = cell ? cell.v : '';
-                
-                let cellColor = null;
-                if (cell && cell.s) {
-                    if (cell.s.fgColor && cell.s.fgColor.rgb) {
-                        cellColor = cell.s.fgColor.rgb;
-                    } else if (cell.s.bgColor && cell.s.bgColor.rgb) {
-                        cellColor = cell.s.bgColor.rgb;
-                    }
-                }
-                
-                if (cellValue) {
-                    atayData.push({ value: cellValue, color: cellColor });
-                }
-            });
-        }
-        
-        const atayRow8Data = [];
-        atayColumns.forEach(col => {
-            const cell = sheet[`${col}8`];
-            const cellValue = cell ? cell.v : '';
-            
-            let cellColor = null;
-            if (cell && cell.s) {
-                if (cell.s.fgColor && cell.s.fgColor.rgb) {
-                    cellColor = cell.s.fgColor.rgb;
-                } else if (cell.s.bgColor && cell.s.bgColor.rgb) {
-                    cellColor = cell.s.bgColor.rgb;
-                }
-            }
-            
-            if (cellValue) {
-                atayRow8Data.push({ value: cellValue, color: cellColor });
-            }
-        });
-        
-        // AU9-12 cellák beolvasása (kötelező óraszámok)
-        let requiredHours8 = null; // AU9 - 8 órás (alapértelmezett)
-        let requiredHours6 = null; // AU10 - 6 órás
-        let requiredHours4 = null; // AU11 - 4 órás  
-        let requiredHours2 = null; // AU12 - 2 órás
-        
-        const au9Cell = sheet['AU9'];
-        const au10Cell = sheet['AU10'];
-        const au11Cell = sheet['AU11'];
-        const au12Cell = sheet['AU12'];
-        
-        if (au9Cell && au9Cell.v) {
-            requiredHours8 = parseFloat(au9Cell.v);
-        }
-        if (au10Cell && au10Cell.v) {
-            requiredHours6 = parseFloat(au10Cell.v);
-        }
-        if (au11Cell && au11Cell.v) {
-            requiredHours4 = parseFloat(au11Cell.v);
-        }
-        if (au12Cell && au12Cell.v) {
-            requiredHours2 = parseFloat(au12Cell.v);
-        }
-        
-        // AT3 cella - szabadság színkód (csak a háttérszín számít!)
-        let vacationColor = null;
-        const at3Cell = sheet['AT3'];
-        
-        // Csak a cella háttérszínét használjuk
-        if (at3Cell && at3Cell.s) {
-            if (at3Cell.s.fgColor && at3Cell.s.fgColor.rgb) {
-                vacationColor = at3Cell.s.fgColor.rgb;
-            } else if (at3Cell.s.bgColor && at3Cell.s.bgColor.rgb) {
-                vacationColor = at3Cell.s.bgColor.rgb;
-            } else if (at3Cell.s.patternFg && at3Cell.s.patternFg.rgb) {
-                vacationColor = at3Cell.s.patternFg.rgb;
-            }
-        }
-        
-        // AV3 cella - betegállomány színkód (csak a háttérszín számít!)
-        let sickLeaveColor = null;
-        const av3Cell = sheet['AV3'];
-        
-        // Csak a cella háttérszínét használjuk
-        if (av3Cell && av3Cell.s) {
-            if (av3Cell.s.fgColor && av3Cell.s.fgColor.rgb) {
-                sickLeaveColor = av3Cell.s.fgColor.rgb;
-            } else if (av3Cell.s.bgColor && av3Cell.s.bgColor.rgb) {
-                sickLeaveColor = av3Cell.s.bgColor.rgb;
-            } else if (av3Cell.s.patternFg && av3Cell.s.patternFg.rgb) {
-                sickLeaveColor = av3Cell.s.patternFg.rgb;
-            }
-        }
-        
-        // AT8 cella - beosztást készítette részletek (sorok) - | jelnél szétválasztva
-        let createdByContent = '';
-        
-        const at8Cell = sheet['AT8'];
-        if (at8Cell && at8Cell.v) {
-            createdByContent = at8Cell.v;
-        }
-        
-        // AT4, AV4, AX4 cellák - további megjegyzések/színmagyarázatok (csak ha van szöveg)
-        const extraNotes = [];
-        
-        const at4Cell = sheet['AT4'];
-        if (at4Cell && at4Cell.v && at4Cell.v.trim() !== '') {
-            let at4Color = null;
-            if (at4Cell.s) {
-                if (at4Cell.s.fgColor && at4Cell.s.fgColor.rgb) {
-                    at4Color = at4Cell.s.fgColor.rgb;
-                } else if (at4Cell.s.fgColor && at4Cell.s.fgColor.theme !== undefined) {
-                    const themeColors = {
-                        0: 'FFFFFF', 1: '000000', 2: 'E7E6E6', 3: '44546A', 4: '4472C4',
-                        5: 'ED7D31', 6: 'A5A5A5', 7: 'FFC000', 8: '5B9BD5', 9: '70AD47'
-                    };
-                    at4Color = themeColors[at4Cell.s.fgColor.theme] || 'FFFFFF';
-                    if (at4Cell.s.fgColor.tint && at4Cell.s.fgColor.tint !== 0) {
-                        at4Color = applyTint(at4Color, at4Cell.s.fgColor.tint);
-                    }
-                } else if (at4Cell.s.bgColor && at4Cell.s.bgColor.rgb) {
-                    at4Color = at4Cell.s.bgColor.rgb;
-                } else if (at4Cell.s.patternFg && at4Cell.s.patternFg.rgb) {
-                    at4Color = at4Cell.s.patternFg.rgb;
-                }
-            }
-            extraNotes.push({ value: at4Cell.v, color: at4Color });
-        }
-        
-        const av4Cell = sheet['AV4'];
-        if (av4Cell && av4Cell.v && av4Cell.v.trim() !== '') {
-            let av4Color = null;
-            if (av4Cell.s) {
-                if (av4Cell.s.fgColor && av4Cell.s.fgColor.rgb) {
-                    av4Color = av4Cell.s.fgColor.rgb;
-                } else if (av4Cell.s.fgColor && av4Cell.s.fgColor.theme !== undefined) {
-                    const themeColors = {
-                        0: 'FFFFFF', 1: '000000', 2: 'E7E6E6', 3: '44546A', 4: '4472C4',
-                        5: 'ED7D31', 6: 'A5A5A5', 7: 'FFC000', 8: '5B9BD5', 9: '70AD47'
-                    };
-                    av4Color = themeColors[av4Cell.s.fgColor.theme] || 'FFFFFF';
-                    if (av4Cell.s.fgColor.tint && av4Cell.s.fgColor.tint !== 0) {
-                        av4Color = applyTint(av4Color, av4Cell.s.fgColor.tint);
-                    }
-                } else if (av4Cell.s.bgColor && av4Cell.s.bgColor.rgb) {
-                    av4Color = av4Cell.s.bgColor.rgb;
-                } else if (av4Cell.s.patternFg && av4Cell.s.patternFg.rgb) {
-                    av4Color = av4Cell.s.patternFg.rgb;
-                }
-            }
-            extraNotes.push({ value: av4Cell.v, color: av4Color });
-        }
-        
-        const ax4Cell = sheet['AX4'];
-        if (ax4Cell && ax4Cell.v && ax4Cell.v.trim() !== '') {
-            let ax4Color = null;
-            if (ax4Cell.s) {
-                if (ax4Cell.s.fgColor && ax4Cell.s.fgColor.rgb) {
-                    ax4Color = ax4Cell.s.fgColor.rgb;
-                } else if (ax4Cell.s.fgColor && ax4Cell.s.fgColor.theme !== undefined) {
-                    const themeColors = {
-                        0: 'FFFFFF', 1: '000000', 2: 'E7E6E6', 3: '44546A', 4: '4472C4',
-                        5: 'ED7D31', 6: 'A5A5A5', 7: 'FFC000', 8: '5B9BD5', 9: '70AD47'
-                    };
-                    ax4Color = themeColors[ax4Cell.s.fgColor.theme] || 'FFFFFF';
-                    if (ax4Cell.s.fgColor.tint && ax4Cell.s.fgColor.tint !== 0) {
-                        ax4Color = applyTint(ax4Color, ax4Cell.s.fgColor.tint);
-                    }
-                } else if (ax4Cell.s.bgColor && ax4Cell.s.bgColor.rgb) {
-                    ax4Color = ax4Cell.s.bgColor.rgb;
-                } else if (ax4Cell.s.patternFg && ax4Cell.s.patternFg.rgb) {
-                    ax4Color = ax4Cell.s.patternFg.rgb;
-                }
-            }
-            extraNotes.push({ value: ax4Cell.v, color: ax4Color });
-        }
-        
-        return {
-            data: data,
-            jColumn: jData,
-            atayData: atayData,
-            yearMonth: yearMonth,
-            atayRow8: atayRow8Data,
-            employeeId: employeeIdFromComment,
-            requiredHours: {
-                hours8: requiredHours8,
-                hours6: requiredHours6,
-                hours4: requiredHours4,
-                hours2: requiredHours2
-            },
-            vacationColor: vacationColor,
-            sickLeaveColor: sickLeaveColor,
-            createdByContent: createdByContent,
-            extraNotes: extraNotes
-        };
-    }
-
-    function getColumnName(index) {
-        let name = '';
-        while (index >= 0) {
-            name = String.fromCharCode(65 + (index % 26)) + name;
-            index = Math.floor(index / 26) - 1;
-        }
-        return name;
-    }
-
-    function displayNames(namesData, fileName) {
-        originalNames = [...namesData];
-        allNamesData = namesData;
-        currentFileName = fileName;
-        
-        const selectContainer = document.getElementById('selectContainer');
-        const nameSelect = document.getElementById('nameSelect');
-        const fileInfo = document.getElementById('fileInfo');
-        
-        let fileYear = '-';
-        let fileMonth = '-';
-        
-        if (namesData.length > 0 && namesData[0].extraInfo && namesData[0].extraInfo.yearMonth) {
-            const ymData = namesData[0].extraInfo.yearMonth;
-            if (ymData.year) fileYear = ymData.year;
-            if (ymData.month) fileMonth = ymData.month;
-        }
-        
-        if (fileYear === '-' || fileMonth === '-') {
-            const fileData = parseFileName(fileName);
-            if (fileYear === '-') fileYear = fileData.year;
-            if (fileMonth === '-') fileMonth = fileData.month;
-        }
-        
-        const fileData = parseFileName(fileName);
-        
-        fileInfo.innerHTML = `
-            <div class="info-item"><strong>Év:</strong> ${fileYear}</div>
-            <div class="info-item"><strong>Hónap:</strong> ${fileMonth}</div>
-            <div class="info-item"><strong>Verzió:</strong> ${fileData.version}</div>
-        `;
-        
-        let existingBtn = document.getElementById('viewToggleBtn');
-        if (existingBtn) {
-            existingBtn.remove();
-        }
-        
-        const toggleBtn = document.createElement('button');
-        toggleBtn.id = 'viewToggleBtn';
-        toggleBtn.className = 'view-toggle-btn';
-        toggleBtn.innerHTML = '📅 Napi nézet';
-        toggleBtn.onclick = toggleView;
-        fileInfo.parentNode.insertBefore(toggleBtn, fileInfo.nextSibling);
-        
-        displayStats(namesData);
-        
-        document.getElementById('btnABC').addEventListener('click', () => sortNames('abc'));
-        document.getElementById('btnABCReverse').addEventListener('click', () => sortNames('reverse'));
-        document.getElementById('btnOriginal').addEventListener('click', () => sortNames('original'));
-        
-        const sortedNames = [...namesData].sort((a, b) => {
-            if (a.name.includes('TBA') && !b.name.includes('TBA')) return 1;
-            if (!a.name.includes('TBA') && b.name.includes('TBA')) return -1;
-            return a.name.localeCompare(b.name, 'hu');
-        });
-        
-        updateNameList(sortedNames);
-        setActiveButton('btnABC');
-        
-        selectContainer.classList.remove('hidden');
-        uploadArea.classList.add('compact');
-        
-        
-        
-        if (namesData.length === 0) {
-            nameSelect.innerHTML = '<option value="">Nem találhatók nevek</option>';
-        }
-    }
-
-    function displayStats(namesData) {
-        // Statisztikák nem jelennek meg név nézetben
-        const statsSection = document.getElementById('statsSection');
-        statsSection.classList.add('hidden');
-    }
-    
-    function displayStatsForDayView(namesData) {
-        const statsSection = document.getElementById('statsSection');
-        
-        let totalMinutes = 0;
-        let count = 0;
-        let maxMinutes = 0;
-        let minMinutes = Infinity;
-        let maxPerson = '';
-        let minPerson = '';
-        
-        namesData.forEach(person => {
-            // TBA és üres nevek kihagyása
-            if (!person.name || person.name.trim() === '' || person.name.toUpperCase().includes('TBA')) {
-                return;
-            }
-            
-            let personMinutes = 0;
-            
-            person.schedule.forEach(day => {
-                const s1 = parseTimeToMinutes(day.start1);
-                const e1 = parseTimeToMinutes(day.end1);
-                const s2 = parseTimeToMinutes(day.start2);
-                const e2 = parseTimeToMinutes(day.end2);
-                
-                if (s1 > 0 && e1 > 0) personMinutes += e1 - s1;
-                if (s2 > 0 && e2 > 0) personMinutes += e2 - s2;
-            });
-            
-            // Mindenkit megszámolunk (még ha 0 órát is dolgozott)
-            totalMinutes += personMinutes;
-            count++;
-            
-            if (personMinutes > maxMinutes) {
-                maxMinutes = personMinutes;
-                maxPerson = person.name;
-            }
-            
-            if (personMinutes > 0 && personMinutes < minMinutes) {
-                minMinutes = personMinutes;
-                minPerson = person.name;
-            }
-        });
-        
-        const avgMinutes = count > 0 ? totalMinutes / count : 0;
-        const avgHours = Math.floor(avgMinutes / 60);
-        const avgMins = Math.round(avgMinutes % 60);
-        
-        statsSection.innerHTML = `
-            <div class="stats-grid">
-                <div class="stat-card">
-                    <div class="stat-label">Átlag munkaidő</div>
-                    <div class="stat-value">${avgHours}h ${avgMins}m</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-label">Összesen dolgozó</div>
-                    <div class="stat-value">${count}</div>
-                </div>
-            </div>
-        `;
-        
-        statsSection.classList.remove('hidden');
-    }
-    
-    function updateStatsForDay(dayWorkerCount, dayIndex, vacationCount = 0, sickLeaveCount = 0, officeCount = 0, dayShiftCount = 0, nightShiftCount = 0) {
-        const statsSection = document.getElementById('statsSection');
-        
-        let totalMinutes = 0;
-        let count = 0;
-        let dayTotalMinutes = 0;
-        
-        allNamesData.forEach(person => {
-            // TBA és üres nevek kihagyása
-            if (!person.name || person.name.trim() === '' || person.name.toUpperCase().includes('TBA')) {
-                return;
-            }
-            
-            let personMinutes = 0;
-            
-            person.schedule.forEach((day, idx) => {
-                const s1 = parseTimeToMinutes(day.start1);
-                const e1 = parseTimeToMinutes(day.end1);
-                const s2 = parseTimeToMinutes(day.start2);
-                const e2 = parseTimeToMinutes(day.end2);
-                
-                let dayMins = 0;
-                if (s1 > 0 && e1 > 0) dayMins += e1 - s1;
-                if (s2 > 0 && e2 > 0) dayMins += e2 - s2;
-                
-                personMinutes += dayMins;
-                
-                // Adott nap órái
-                if (idx === dayIndex) {
-                    dayTotalMinutes += dayMins;
-                }
-            });
-            
-            // Mindenkit megszámolunk (még ha 0 órát is dolgozott)
-            totalMinutes += personMinutes;
-            count++;
-        });
-        
-        // Statisztikák összecsukható szekció alatt
-        statsSection.innerHTML = `
-            <div class="section-header collapsed" onclick="toggleSection(this)" style="margin-top: 20px;">📊 Statisztikák</div>
-            <div class="collapsible-content hidden">
-                <div class="stats-grid" style="margin-top: 10px;">
-                    <div class="stat-card">
-                        <div class="stat-label">Összesen dolgozó</div>
-                        <div class="stat-value">${count}</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-label">Aznap dolgozók</div>
-                        <div class="stat-value">${dayWorkerCount}</div>
-                    </div>
-                    <div class="stat-card" style="border-color: #ff9800;">
-                        <div class="stat-label">Aznap szabadságon</div>
-                        <div class="stat-value" style="color: #ff9800;">${vacationCount}</div>
-                    </div>
-                    <div class="stat-card" style="border-color: #e91e63;">
-                        <div class="stat-label">Aznap betegállományban</div>
-                        <div class="stat-value" style="color: #e91e63;">${sickLeaveCount}</div>
-                    </div>
-                    <div class="stat-card" style="border-color: #2196f3;">
-                        <div class="stat-label">Aznap irodában</div>
-                        <div class="stat-value" style="color: #2196f3;">${officeCount}</div>
-                    </div>
-                    <div class="stat-card" style="border-color: #ffc107;">
-                        <div class="stat-label">☀️ Napalos (5:30-17:30)</div>
-                        <div class="stat-value" style="color: #ffc107;">${dayShiftCount}</div>
-                    </div>
-                    <div class="stat-card" style="border-color: #3f51b5;">
-                        <div class="stat-label">🌙 Éjszakás (17:30-5:30)</div>
-                        <div class="stat-value" style="color: #3f51b5;">${nightShiftCount}</div>
-                    </div>
-                </div>
-            </div>
-        `;
-        
-        statsSection.classList.remove('hidden');
-    }
-
-    function parseFileName(fileName) {
-        const result = { year: '-', month: '-', version: '-' };
-        
-        const yearMatch = fileName.match(/(\d{4})/);
-        if (yearMatch) {
-            result.year = yearMatch[1];
-        }
-        
-        const monthsHu = {
-            'JAN': 'Január', 'FEB': 'Február', 'MAR': 'Március', 'APR': 'Április',
-            'MAJ': 'Május', 'JUN': 'Június', 'JUL': 'Július', 'AUG': 'Augusztus',
-            'SZEPT': 'Szeptember', 'OKT': 'Október', 'NOV': 'November', 'DEC': 'December'
-        };
-        
-        const upperFileName = fileName.toUpperCase();
-        for (let [key, value] of Object.entries(monthsHu)) {
-            if (upperFileName.includes(key)) {
-                result.month = value;
-                break;
-            }
-        }
-        
-        const versionMatch = fileName.match(/(?:ver|version|v)\s*(\d+)/i);
-        if (versionMatch) {
-            result.version = 'v' + versionMatch[1];
-        }
-        
-        return result;
-    }
-
-    function sortNames(type) {
-        let sortedNames = [...allNamesData];
-        
-        if (type === 'abc') {
-            sortedNames.sort((a, b) => {
-                if (a.name.includes('TBA') && !b.name.includes('TBA')) return 1;
-                if (!a.name.includes('TBA') && b.name.includes('TBA')) return -1;
-                return a.name.localeCompare(b.name, 'hu');
-            });
-            setActiveButton('btnABC');
-        } else if (type === 'reverse') {
-            sortedNames.sort((a, b) => {
-                if (a.name.includes('TBA') && !b.name.includes('TBA')) return 1;
-                if (!a.name.includes('TBA') && b.name.includes('TBA')) return -1;
-                return b.name.localeCompare(a.name, 'hu');
-            });
-            setActiveButton('btnABCReverse');
-        } else if (type === 'original') {
-            sortedNames.sort((a, b) => a.originalIndex - b.originalIndex);
-            setActiveButton('btnOriginal');
-        }
-        
-        updateNameList(sortedNames);
-    }
-
-    function updateNameList(namesData) {
-        const nameSelect = document.getElementById('nameSelect');
-        nameSelect.innerHTML = '<option value="">-- Válassz nevet --</option>';
-        
-        namesData.forEach((item, index) => {
-            const option = document.createElement('option');
-            option.value = index;
-            option.textContent = item.name;
-            option.dataset.scheduleData = JSON.stringify(item.schedule);
-            // excelRow hozzáadása az extraInfo-hoz
-            const extraInfoWithRow = { ...item.extraInfo, excelRow: item.excelRow };
-            option.dataset.extraInfo = JSON.stringify(extraInfoWithRow);
-            option.dataset.nameFull = item.name;
-            
-            nameSelect.appendChild(option);
-        });
-        
-        nameSelect.onchange = function() {
-            const selectedOption = this.options[this.selectedIndex];
-            if (selectedOption.value === '') {
-                document.getElementById('scheduleDisplay').classList.add('hidden');
-                currentSelectedPersonRow = null;
-                return;
-            }
-            
-            const schedule = JSON.parse(selectedOption.dataset.scheduleData);
-            const extraInfo = JSON.parse(selectedOption.dataset.extraInfo);
-            const name = selectedOption.dataset.nameFull;
-            
-            // Kiválasztott név Excel sorának tárolása
-            currentSelectedPersonRow = extraInfo.excelRow;
-            
-            localStorage.setItem('lastSelectedName', name);
-            
-            displaySchedule(name, schedule, extraInfo);
-        };
-        
-        const lastSelectedName = localStorage.getItem('lastSelectedName');
-        if (lastSelectedName) {
-            for (let i = 0; i < nameSelect.options.length; i++) {
-                if (nameSelect.options[i].dataset.nameFull === lastSelectedName) {
-                    nameSelect.selectedIndex = i;
-                    nameSelect.onchange();
-                    break;
-                }
-            }
-        }
-    }
-
-    function displaySchedule(name, schedule, extraInfo) {
-        const scheduleDisplay = document.getElementById('scheduleDisplay');
-        const selectedNameTitle = document.getElementById('selectedNameTitle');
-        const scheduleContent = document.getElementById('scheduleContent');
-        
-        // Név háttérszíne (az aktuális személyé)
-        const currentPerson = allNamesData.find(p => p.name === name);
-        const nameBgColor = currentPerson && currentPerson.nameColor ? `#${currentPerson.nameColor}` : 'transparent';
-        
-        // Szövegszín automatikus beállítása (sötét háttérnél fehér szöveg)
-        let nameTextColor = 'var(--text-primary)';
-        if (currentPerson && currentPerson.nameColor) {
-            const r = parseInt(currentPerson.nameColor.substring(0, 2), 16);
-            const g = parseInt(currentPerson.nameColor.substring(2, 4), 16);
-            const b = parseInt(currentPerson.nameColor.substring(4, 6), 16);
-            const brightness = (r * 299 + g * 587 + b * 114) / 1000;
-            nameTextColor = brightness < 128 ? '#ffffff' : '#000000';
-        }
-        
-        let nameHTML = '';
-        nameHTML += `<div style="font-size: 20px; color: ${nameTextColor}; font-weight: 700; text-align: center; margin-bottom: 0px; line-height: 1.2; background-color: ${nameBgColor}; padding: 10px; border-radius: 8px;">${name}</div>`;
-        
-        if (extraInfo && extraInfo.employeeId) {
-            let employeeNum = extraInfo.employeeId.replace(/^[^:]+:\s*/, '').trim();
-            if (employeeNum) {
-                nameHTML += `<div style="font-size: 18px; color: #d32f2f; font-weight: 700; text-align: center; margin: 0px; line-height: 1.2;">${employeeNum}</div>`;
-            }
-        }
-        
-        if (extraInfo && extraInfo.jColumn && extraInfo.jColumn.length > 0) {
-            extraInfo.jColumn.forEach(note => {
-                if (note && note.value) {
-                    const bgColor = note.color ? `#${note.color}` : 'transparent';
-                    nameHTML += `<div style="background-color: ${bgColor}; padding: 3px; margin: 0px; text-align: center; line-height: 1.2; font-size: 14px;" class="j-column-note">${note.value}</div>`;
-                }
-            });
-        }
-        
-        selectedNameTitle.innerHTML = nameHTML;
-        
-        if (!schedule || schedule.length === 0) {
-            scheduleContent.innerHTML = '<p>Nincs beosztás ehhez a névhez.</p>';
-            scheduleDisplay.classList.remove('hidden');
-            return;
-        }
-        
-        let totalWorkedMinutes = 0;
-        let weekdayCount = 0;
-        
-        schedule.forEach(day => {
-            const start1Min = parseTimeToMinutes(day.start1);
-            const end1Min = parseTimeToMinutes(day.end1);
-            const start2Min = parseTimeToMinutes(day.start2);
-            const end2Min = parseTimeToMinutes(day.end2);
-            
-            if (start1Min > 0 && end1Min > 0) {
-                totalWorkedMinutes += end1Min - start1Min;
-            }
-            
-            if (start2Min > 0 && end2Min > 0) {
-                totalWorkedMinutes += end2Min - start2Min;
-            }
-            
-            const dayName = day.day ? day.day.toUpperCase() : '';
-            
-            if (!dayName || dayName === '') {
-                return;
-            }
-            
-            const isWeekend = dayName.includes('SZOMBAT') || dayName.includes('VASÁRNAP') || 
-                              dayName.includes('SZO') || dayName.includes('VAS') ||
-                              dayName.includes('SAT') || dayName.includes('SUN') ||
-                              dayName.startsWith('SZO') || dayName.startsWith('VAS') ||
-                              dayName === 'V' || dayName === 'SZO';
-            
-            if (!isWeekend) {
-                weekdayCount++;
-            }
-        });
-        
-        const workedHours = Math.floor(totalWorkedMinutes / 60);
-        const workedMinutes = totalWorkedMinutes % 60;
-        const workedDisplay = workedMinutes > 0 ? `${workedHours}h ${workedMinutes}m` : `${workedHours}h`;
-        
-        // Kötelező óraszám meghatározása a név alapján
-        let requiredMinutes = 0;
-        
-        if (name.includes('6 órás') && extraInfo && extraInfo.requiredHours && extraInfo.requiredHours.hours6) {
-            requiredMinutes = extraInfo.requiredHours.hours6 * 60;
-        } else if (name.includes('4 órás') && extraInfo && extraInfo.requiredHours && extraInfo.requiredHours.hours4) {
-            requiredMinutes = extraInfo.requiredHours.hours4 * 60;
-        } else if (name.includes('2 órás') && extraInfo && extraInfo.requiredHours && extraInfo.requiredHours.hours2) {
-            requiredMinutes = extraInfo.requiredHours.hours2 * 60;
-        } else if (extraInfo && extraInfo.requiredHours && extraInfo.requiredHours.hours8) {
-            // 8 órás (alapértelmezett) - AU9 cellából
-            requiredMinutes = extraInfo.requiredHours.hours8 * 60;
-        } else {
-            // Ha nincs AU9, akkor hétköznapok × 8
-            requiredMinutes = weekdayCount * 8 * 60;
-        }
-        
-        const requiredHours = Math.floor(requiredMinutes / 60);
-        const requiredDisplay = `${requiredHours}h`;
-        
-        const diffMinutes = totalWorkedMinutes - requiredMinutes;
-        const diffHours = Math.floor(Math.abs(diffMinutes) / 60);
-        const diffMins = Math.abs(diffMinutes) % 60;
-        const diffSign = diffMinutes >= 0 ? '+' : '-';
-        const diffDisplay = diffMins > 0 ? `${diffSign}${diffHours}h ${diffMins}m` : `${diffSign}${diffHours}h`;
-        const diffClass = diffMinutes >= 0 ? 'positive' : 'negative';
-        
-        let summaryHTML = `
-            <div class="schedule-summary">
-                <div class="summary-box">
-                    <div class="summary-label">Kötelező óraszám</div>
-                    <div class="summary-value">${requiredDisplay}</div>
-                </div>
-                <div class="summary-box">
-                    <div class="summary-label">Ledolgozott óraszám</div>
-                    <div class="summary-value">${workedDisplay}</div>
-                </div>
-                <div class="summary-box diff-box ${diffClass}">
-                    <div class="summary-label">Különbség</div>
-                    <div class="summary-value">${diffDisplay}</div>
-                </div>
-            </div>
-        `;
-        
-        let tableHTML = `
-            <table class="schedule-table">
-                <thead>
-                    <tr>
-                        <th>📅 Nap</th>
-                        <th>🕐 Kezdés</th>
-                        <th>🕐 Vége</th>
-                        <th>💼 Munkaidő</th>
-                    </tr>
-                </thead>
-                <tbody>
-        `;
-        
-        schedule.forEach(day => {
-            const start1 = formatTime(day.start1);
-            const end1 = formatTime(day.end1);
-            const start2 = formatTime(day.start2);
-            const end2 = formatTime(day.end2);
-            
-            // Külön színek a munkakezdéshez és munkavéghez
-            const start1Color = day.start1Color ? `#${day.start1Color}` : 'transparent';
-            const end1Color = day.end1Color ? `#${day.end1Color}` : 'transparent';
-            
-            let startCell = start1;
-            let endCell = end1;
-            
-            const workHours = calculateWorkHours(day.start1, day.end1, day.start2, day.end2);
-            
-            if (start2 && start2 !== '-' && end2 && end2 !== '-') {
-                startCell = `${start1}<br>${start2}`;
-                endCell = `${end1}<br>${end2}`;
-            }
-            
-            const dateStr = formatDate(day.date);
-            const dayDisplay = dateStr ? `${day.day}<br><small style="color: var(--text-secondary);">${dateStr}</small>` : day.day;
-            
-            // Mai nap kiemelése
-            const today = new Date();
-            const todayDay = today.getDate();
-            const dayNum = dateStr ? parseInt(dateStr.replace('.', '')) : 0;
-            const isToday = dayNum === todayDay;
-            const isPast = dayNum < todayDay;
-            
-            const rowColor = day.color ? `#${day.color}` : 'var(--bg-secondary)';
-            
-            // Gradient háttér start és end színekkel
-            const gradientBg = `linear-gradient(to right, ${start1Color} 0%, ${start1Color} 50%, ${end1Color} 50%, ${end1Color} 100%)`;
-            
-            // Mai nap extra kiemelése, DE megtartjuk az eredeti háttérszínt!
-            let todayStyle = '';
-            let todayBorder = '';
-            
-            if (isToday) {
-                // Mai nap: megtartjuk az eredeti színt + vastag kék keret
-                todayBorder = '5px solid var(--accent-primary)';
-                todayStyle = `
-                    box-shadow: 0 0 25px rgba(102, 126, 234, 0.9), inset 0 0 20px rgba(102, 126, 234, 0.3); 
-                    font-weight: 900; 
-                    position: relative;
-                    z-index: 10;
-                `;
-            } else if (isPast) {
-                todayStyle = 'border-bottom: 2px solid var(--border-color); opacity: 0.8;';
-            }
-            
-            const rowStyle = `background: ${gradientBg}; ${todayStyle} ${todayBorder ? 'border: ' + todayBorder + ';' : ''}`;
-            
-            tableHTML += `
-                <tr style="${rowStyle}">
-                    <td><strong>${dayDisplay}</strong></td>
-                    <td style="padding: 8px;">${startCell}</td>
-                    <td style="padding: 8px;">${endCell}</td>
-                    <td><strong>${workHours}</strong></td>
-                </tr>
-            `;
-            
-            // Megjegyzés megjelenítése a nap alatt (ha van)
-            if (day.comment && day.comment.trim() !== '') {
-                const commentFormatted = day.comment.replace(/\n/g, '<br>');
-                tableHTML += `
-                    <tr style="background: var(--bg-tertiary); border-left: 4px solid var(--accent-secondary);">
-                        <td colspan="4" style="padding: 10px; font-size: 0.9em; font-style: italic; color: var(--text-secondary);">
-                            💬 ${commentFormatted}
-                        </td>
-                    </tr>
-                `;
-            }
-        });
-        
-        tableHTML += `
-                </tbody>
-            </table>
-        `;
-        
-        let atayHTML = '';
-        if ((extraInfo && extraInfo.atayData && extraInfo.atayData.length > 0) || 
-            (extraInfo && extraInfo.extraNotes && extraInfo.extraNotes.length > 0)) {
-            atayHTML = '<div class="section-header collapsed" onclick="toggleSection(this)">Megjegyzés, Színmagyarázat</div>';
-            atayHTML += '<div class="extra-info collapsible-content hidden">';
-            
-            // ATAY sor adatok
-            if (extraInfo && extraInfo.atayData) {
-                extraInfo.atayData.forEach(cellData => {
-                    if (cellData && cellData.value && cellData.value !== '') {
-                        const bgColor = cellData.color ? `#${cellData.color}` : 'white';
-                        atayHTML += `<div class="info-row" style="background-color: ${bgColor};">${cellData.value}</div>`;
-                    }
-                });
-            }
-            
-            // AT4, AV4, AX4 további megjegyzések (ugyanabba a szekcióba)
-            if (extraInfo && extraInfo.extraNotes) {
-                extraInfo.extraNotes.forEach(note => {
-                    const bgColor = note.color ? `#${note.color}` : 'white';
-                    atayHTML += `<div class="info-row" style="background-color: ${bgColor};">${note.value}</div>`;
-                });
-            }
-            
-            atayHTML += '</div>';
-        }
-        
-        let extraInfoHTML = '';
-        if ((extraInfo && extraInfo.data && extraInfo.data.length > 0)) {
-            extraInfoHTML = '<div class="section-header collapsed" onclick="toggleSection(this)">Eszközök lista</div>';
-            extraInfoHTML += '<div class="extra-info collapsible-content hidden">';
-            
-            const columns = ['C', 'D', 'E', 'F', 'G', 'H', 'I'];
-            
-            if (extraInfo && extraInfo.data) {
-                // Oszloponként végigmegyünk: C9,C10,C11,C12, D9,D10,D11,D12, ...
-                columns.forEach(col => {
-                    extraInfo.data.forEach(rowData => {
-                        const cellData = rowData[col];
-                        if (cellData && cellData.value && cellData.value.trim() !== '') {
-                            const bgColor = cellData.color ? `#${cellData.color}` : 'white';
-                            
-                            // Eszköz megjelenítése
-                            extraInfoHTML += `<div class="info-row" style="background-color: ${bgColor}; font-weight: 600; margin-top: 10px;">🔧 ${cellData.value}</div>`;
-                            
-                            // Megjegyzés megjelenítése (ha van) - sortöréssel
-                            if (cellData.comment && cellData.comment.trim() !== '') {
-                                // Sortörések kezelése: \n → <br>
-                                const formattedComment = cellData.comment.replace(/\n/g, '<br>');
-                                extraInfoHTML += `<div class="info-row" style="background-color: ${bgColor}; margin-left: 20px; font-size: 0.9em; font-style: italic; border-left: 3px solid var(--accent-primary); padding-left: 10px; opacity: 0.85; white-space: normal;">└─ ${formattedComment}</div>`;
-                            }
-                        }
-                    });
-                });
-            }
-            
-            extraInfoHTML += '</div>';
-        }
-        
-        
-        // Beosztást készítette (AT8 tartalom | jelnél kettéválasztva)
-        let createdByHTML = '';
-        if (extraInfo && extraInfo.createdByContent) {
-            const lines = extraInfo.createdByContent.split('|').map(line => line.trim()).filter(line => line);
-            
-            let linesHTML = '';
-            lines.forEach(line => {
-                linesHTML += `<div class="info-row">${line}</div>`;
-            });
-            
-            createdByHTML = `
-                <div class="section-header collapsed" onclick="toggleSection(this)">Beosztást készítette</div>
-                <div class="extra-info collapsible-content hidden">
-                    ${linesHTML}
-                </div>
-            `;
-        }
-        
-        scheduleContent.innerHTML = summaryHTML + tableHTML + atayHTML + extraInfoHTML + createdByHTML;
-        scheduleDisplay.classList.remove('hidden');
-        
-        // Excel táblázat automatikus megjelenítése
-        displayExcelSheet();
-        
-    }
-
-    function applyTint(rgbHex, tint) {
-        // Tint alkalmazása RGB színre (-1.0 = sötétebb, +1.0 = világosabb)
-        if (!rgbHex || tint === 0) return rgbHex;
-        
-        // RGB hex -> RGB számok
-        const r = parseInt(rgbHex.substring(0, 2), 16);
-        const g = parseInt(rgbHex.substring(2, 4), 16);
-        const b = parseInt(rgbHex.substring(4, 6), 16);
-        
-        // Tint alkalmazása
-        let newR, newG, newB;
-        if (tint < 0) {
-            // Sötétítés
-            newR = Math.round(r * (1 + tint));
-            newG = Math.round(g * (1 + tint));
-            newB = Math.round(b * (1 + tint));
-        } else {
-            // Világosítás
-            newR = Math.round(r + (255 - r) * tint);
-            newG = Math.round(g + (255 - g) * tint);
-            newB = Math.round(b + (255 - b) * tint);
-        }
-        
-        // Vissza hex-be
-        const toHex = (n) => {
-            const hex = Math.max(0, Math.min(255, n)).toString(16);
-            return hex.length === 1 ? '0' + hex : hex;
-        };
-        
-        return toHex(newR) + toHex(newG) + toHex(newB);
-    }
-
-    function formatTime(time) {
-        if (!time || time === '' || time === 0) return '-';
-        
-        if (typeof time === 'number') {
-            let hours = Math.floor(time * 24);
-            let minutes = Math.round((time * 24 - hours) * 60);
-            
-            if (hours >= 24) {
-                hours = hours - 24;
-            }
-            
-            return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
-        }
-        
-        if (typeof time === 'string') {
-            const match = time.match(/(\d+):(\d+)/);
-            if (match) {
-                let hours = parseInt(match[1]);
-                const minutes = match[2];
-                
-                if (hours >= 24) {
-                    hours = hours - 24;
-                }
-                
-                return `${String(hours).padStart(2, '0')}:${minutes}`;
-            }
-        }
-        
-        return time.toString();
-    }
-
-    function formatDate(date) {
-        if (!date || date === '') return '';
-        
-        if (typeof date === 'number') {
-            const excelEpoch = new Date(1899, 11, 30);
-            const dateObj = new Date(excelEpoch.getTime() + date * 24 * 60 * 60 * 1000);
-            const day = String(dateObj.getDate()).padStart(2, '0');
-            return `${day}.`;
-        }
-        
-        return date.toString();
-    }
-
-    function parseTimeToMinutes(time) {
-        if (!time || time === '' || time === 0) return 0;
-        
-        if (typeof time === 'number') {
-            return Math.round(time * 24 * 60);
-        }
-        
-        if (typeof time === 'string') {
-            const match = time.match(/(\d+):(\d+)/);
-            if (match) {
-                const hours = parseInt(match[1]);
-                const minutes = parseInt(match[2]);
-                return hours * 60 + minutes;
-            }
-        }
-        
-        return 0;
-    }
-
-    function calculateWorkHours(start1, end1, start2, end2) {
-        const s1 = parseTimeToMinutes(start1);
-        const e1 = parseTimeToMinutes(end1);
-        const s2 = parseTimeToMinutes(start2);
-        const e2 = parseTimeToMinutes(end2);
-        
-        let totalMinutes = 0;
-        
-        if (s1 > 0 && e1 > 0) {
-            totalMinutes += e1 - s1;
-        }
-        
-        if (s2 > 0 && e2 > 0) {
-            totalMinutes += e2 - s2;
-        }
-        
-        if (totalMinutes === 0) return '-';
-        
-        const hours = Math.floor(totalMinutes / 60);
-        const minutes = totalMinutes % 60;
-        
-        if (minutes > 0) {
-            return `${hours}h ${minutes}m`;
-        }
-        return `${hours}h`;
-    }
-
-    function setActiveButton(activeId) {
-        document.querySelectorAll('.sort-btn').forEach(btn => {
-            btn.classList.remove('active');
-        });
-        document.getElementById(activeId).classList.add('active');
-    }
-    
-    function toggleSection(header) {
-        header.classList.toggle('collapsed');
-        const content = header.nextElementSibling;
-        content.classList.toggle('hidden');
-    }
-    
-    function toggleView() {
-        if (currentViewMode === 'names') {
-            switchToDayView();
-        } else {
-            switchToNameView();
-        }
-    }
-    
-    function toggleExcelView() {
-        const excelView = document.getElementById('excelView');
-        const excelBtn = document.getElementById('excelViewBtn');
-        const scheduleDisplay = document.getElementById('scheduleDisplay');
-        const nameSelect = document.getElementById('nameSelect');
-        const sortButtons = document.querySelector('.sort-buttons');
-        const statsSection = document.getElementById('statsSection');
-        
-        if (excelView.classList.contains('hidden')) {
-            // Ellenőrzés: csak név nézetben lehet megnyitni
-            if (currentViewMode !== 'names') {
-                return; // Napi nézetben ne nyíljon meg
-            }
-            
-            // Excel nézet megnyitása
-            if (!originalWorkbook) {
-                alert('Nincs betöltött Excel fájl!');
-                return;
-            }
-            
-            // Minden más elrejtése
-            scheduleDisplay.classList.add('hidden');
-            if (nameSelect) nameSelect.style.display = 'none';
-            if (sortButtons) sortButtons.style.display = 'none';
-            if (statsSection) statsSection.classList.add('hidden');
-            
-            displayExcelSheet();
-            excelView.classList.remove('hidden');
-            excelBtn.innerHTML = '✕ Excel táblázat elrejtése';
-        } else {
-            // Excel nézet bezárása - visszaállítás
-            excelView.classList.add('hidden');
-            excelBtn.innerHTML = '📊 Excel táblázat mutatása';
-            
-            // Munkalap fülek eltávolítása
-            const existingTabs = document.getElementById('sheetTabs');
-            if (existingTabs) {
-                existingTabs.remove();
-            }
-            
-            // Előző nézet visszaállítása
-            if (currentViewMode === 'names') {
-                if (nameSelect) nameSelect.style.display = 'block';
-                if (sortButtons) sortButtons.style.display = 'flex';
-            } else {
-                if (statsSection) statsSection.classList.remove('hidden');
-            }
-        }
-    }
-    
-    function closeExcelView() {
-        toggleExcelView();
-    }
-    
-    let currentZoom = 50; // %
-    
-    function zoomIn() {
-        currentZoom = Math.min(200, currentZoom + 10);
-        applyZoom();
-    }
-    
-    function zoomOut() {
-        currentZoom = Math.max(10, currentZoom - 10); // Minimum 10%
-        applyZoom();
-    }
-    
-    function resetZoom() {
-        currentZoom = 50;
-        applyZoom();
-    }
-    
-    function applyZoom() {
-        const excelContent = document.getElementById('excelContent');
-        excelContent.style.fontSize = currentZoom + '%';
-        document.getElementById('zoomLevel').textContent = currentZoom + '%';
-    }
-    
-    let currentSheetIndex = 0;
-    
-    function switchSheet(index) {
-        currentSheetIndex = index;
-        displayCurrentSheet();
-        
-        // Fülek aktív állapotának frissítése
-        const tabs = document.querySelectorAll('.sheet-tab');
-        tabs.forEach((tab, i) => {
-            if (i === index) {
-                tab.style.background = 'var(--accent-primary)';
-                tab.style.color = 'white';
-                tab.style.fontWeight = '700';
-            } else {
-                tab.style.background = 'var(--bg-secondary)';
-                tab.style.color = 'var(--text-primary)';
-                tab.style.fontWeight = '600';
-            }
-        });
-    }
-    
-    function displayExcelSheet() {
-        if (!originalWorkbook) return;
-        
-        // Excel nézet megjelenítése
-        const excelView = document.getElementById('excelView');
-        if (excelView) {
-            excelView.classList.remove('hidden');
-        }
-        
-        // Csak az első munkalapot jelenítjük meg
-        currentSheetIndex = 0;
-        displayCurrentSheet();
-        
-        // Alapértelmezett zoom alkalmazása
-        applyZoom();
-    }
-    
-    function displayCurrentSheet() {
-        const excelContent = document.getElementById('excelContent');
-        
-        if (!originalWorkbook) return;
-        
-        const sheetName = originalWorkbook.SheetNames[currentSheetIndex];
-        const sheet = originalWorkbook.Sheets[sheetName];
-        
-        excelContent.innerHTML = `
-            <div style="border: 1px solid var(--border-color); border-radius: 8px; overflow: auto;">
-                ${generateColoredTable(sheet)}
-            </div>
-        `;
-    }
-    
-    function generateColoredTable(sheet) {
-        const range = XLSX.utils.decode_range(sheet['!ref'] || 'A1');
-        let html = '<table style="border-collapse: collapse; width: 100%; position: relative;">';
-        
-        for (let R = range.s.r; R <= range.e.r; ++R) {
-            // Szűrés: csak 1-8 sor (0-7 index) + kiválasztott név 4 sora
-            // currentSelectedPersonRow 1-based (9, 13, 17...), R 0-based (0, 1, 2...)
-            const selectedRowStart = currentSelectedPersonRow !== null ? currentSelectedPersonRow - 1 : null;
-            
-            const shouldShowRow = (R <= 7) || 
-                                 (selectedRowStart !== null && 
-                                  R >= selectedRowStart && 
-                                  R < selectedRowStart + 4);
-            
-            if (!shouldShowRow) {
-                continue; // Skip this row
-            }
-            
-            html += '<tr>';
-            for (let C = range.s.c; C <= range.e.c; ++C) {
-                const cellAddress = XLSX.utils.encode_cell({ r: R, c: C });
-                const cell = sheet[cellAddress];
-                
-                let cellValue = '';
-                let bgColor = 'transparent';
-                let textColor = 'var(--text-primary)';
-                
-                if (cell) {
-                    // Érték
-                    cellValue = cell.v || '';
-                    
-                    // Excel idő konverzió (ha szám típusú és idő formátumú)
-                    if (cell.t === 'n' && cell.z && typeof cellValue === 'number') {
-                        // Ellenőrizzük hogy idő formátum-e (tartalmaz h, m, vagy s karaktert)
-                        if (cell.z.toLowerCase().includes('h') || 
-                            cell.z.toLowerCase().includes('m') || 
-                            cell.z.toLowerCase().includes('s')) {
-                            // Excel az időt nap törtrésze formában tárolja
-                            // 1 nap = 1.0, 1 óra = 1/24
-                            const totalHours = cellValue * 24;
-                            const hours = Math.floor(totalHours);
-                            const minutes = Math.floor((totalHours - hours) * 60);
-                            const seconds = Math.floor(((totalHours - hours) * 60 - minutes) * 60);
-                            cellValue = `${hours}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
-                        }
-                    }
-                    
-                    // Szín beolvasása
-                    if (cell.s) {
-                        // Háttérszín (fgColor amikor patternType: solid)
-                        if (cell.s.fgColor && cell.s.fgColor.rgb) {
-                            bgColor = '#' + cell.s.fgColor.rgb;
-                        } else if (cell.s.fgColor && cell.s.fgColor.theme !== undefined) {
-                            const themeColors = {
-                                0: 'FFFFFF', 1: '000000', 2: 'E7E6E6', 3: '44546A', 4: '4472C4',
-                                5: 'ED7D31', 6: 'A5A5A5', 7: 'FFC000', 8: '5B9BD5', 9: '70AD47'
-                            };
-                            let color = themeColors[cell.s.fgColor.theme] || 'FFFFFF';
-                            if (cell.s.fgColor.tint && cell.s.fgColor.tint !== 0) {
-                                color = applyTint(color, cell.s.fgColor.tint);
-                            }
-                            bgColor = '#' + color;
-                        } else if (cell.s.bgColor && cell.s.bgColor.rgb) {
-                            bgColor = '#' + cell.s.bgColor.rgb;
-                        } else if (cell.s.patternFg && cell.s.patternFg.rgb) {
-                            bgColor = '#' + cell.s.patternFg.rgb;
-                        }
-                        
-                        // Betűszín (font color)
-                        if (cell.s.font && cell.s.font.color) {
-                            if (cell.s.font.color.rgb) {
-                                textColor = '#' + cell.s.font.color.rgb;
-                            } else if (cell.s.font.color.theme !== undefined) {
-                                const themeColors = {
-                                    0: 'FFFFFF', 1: '000000', 2: 'E7E6E6', 3: '44546A', 4: '4472C4',
-                                    5: 'ED7D31', 6: 'A5A5A5', 7: 'FFC000', 8: '5B9BD5', 9: '70AD47'
-                                };
-                                let color = themeColors[cell.s.font.color.theme] || '000000';
-                                if (cell.s.font.color.tint && cell.s.font.color.tint !== 0) {
-                                    color = applyTint(color, cell.s.font.color.tint);
-                                }
-                                textColor = '#' + color;
-                            }
-                        }
-                    }
-                }
-                
-                // A oszlop rögzítése (sticky) - szélesség a tartalom alapján
-                const stickyStyle = C === 0 ? `
-                    position: sticky;
-                    left: 0;
-                    z-index: 10;
-                    box-shadow: 2px 0 5px rgba(0,0,0,0.1);
-                ` : '';
-                
-                // K oszlop (index 10) keskenyre állítása
-                const widthStyle = C === 10 ? 'width: 60px; max-width: 60px;' : '';
-                
-                const cellStyle = `
-                    border: 1px solid var(--border-color);
-                    padding: 8px 12px;
-                    background-color: ${bgColor};
-                    color: ${textColor};
-                    white-space: ${C === 0 ? 'nowrap' : 'nowrap'};
-                    ${widthStyle}
-                    ${stickyStyle}
-                `;
-                
-                html += `<td style="${cellStyle}">${cellValue}</td>`;
-            }
-            html += '</tr>';
-        }
-        html += '</table>';
-        return html;
-    }
-    
-    function switchToDayView() {
-        currentViewMode = 'days';
-        
-        // Excel nézet bezárása ha nyitva van
-        const excelView = document.getElementById('excelView');
-        if (excelView && !excelView.classList.contains('hidden')) {
-            excelView.classList.add('hidden');
-        }
-        
-        document.querySelector('.sort-buttons').style.display = 'none';
-        document.getElementById('nameSelect').style.display = 'none';
-        
-        const toggleBtn = document.getElementById('viewToggleBtn');
-        if (toggleBtn) {
-            toggleBtn.innerHTML = '👤 Név nézet';
-        }
-        
-        displayCalendarView();
-    }
-    
-    function displayCalendarView() {
-        const scheduleDisplay = document.getElementById('scheduleDisplay');
-        const selectedNameTitle = document.getElementById('selectedNameTitle');
-        const scheduleContent = document.getElementById('scheduleContent');
-        
-        selectedNameTitle.innerHTML = '📅 Havi naptár';
-        
-        // Napok összegyűjtése
-        const days = [];
-        if (allNamesData.length > 0 && allNamesData[0].schedule) {
-            allNamesData[0].schedule.forEach((day, index) => {
-                if (day.day) {
-                    const dateStr = formatDate(day.date);
-                    const dayNum = dateStr ? parseInt(dateStr.replace('.', '')) : 0;
-                    days.push({
-                        dayName: day.day,
-                        date: dateStr,
-                        dayNum: dayNum,
-                        index: index
-                    });
-                }
-            });
-        }
-        
-        // Naptár HTML generálása
-        let calendarHTML = '<div style="width: 100%; margin: 20px 0; overflow-x: auto;">';
-        calendarHTML += '<div style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px; margin-bottom: 10px; max-width: 100%;">';
-        
-        // Fejléc
-        const headers = ['H', 'K', 'Sze', 'Cs', 'P', 'Szo', 'V'];
-        headers.forEach(h => {
-            calendarHTML += `<div style="text-align: center; font-weight: bold; padding: 8px 5px; color: var(--accent-primary); font-size: 12px;">${h}</div>`;
-        });
-        
-        // Napok rendezése
-        days.sort((a, b) => a.dayNum - b.dayNum);
-        
-        // Első nap pozíciója (H=0, K=1, Sze=2, Cs=3, P=4, Szo=5, V=6)
-        let firstDayPos = 0;
-        if (days.length > 0) {
-            const dayName = days[0].dayName.toUpperCase();
-            if (dayName.includes('KEDD')) firstDayPos = 1;
-            else if (dayName.includes('SZERDA') || dayName.includes('SZE')) firstDayPos = 2;
-            else if (dayName.includes('CSÜTÖRTÖK') || dayName.includes('CS')) firstDayPos = 3;
-            else if (dayName.includes('PÉNTEK') || dayName.includes('P')) firstDayPos = 4;
-            else if (dayName.includes('SZOMBAT') || dayName.includes('SZO')) firstDayPos = 5;
-            else if (dayName.includes('VASÁRNAP') || dayName.includes('V')) firstDayPos = 6;
-        }
-        
-        // Üres cellák az első nap előtt
-        for (let i = 0; i < firstDayPos; i++) {
-            calendarHTML += '<div></div>';
-        }
-        
-        // Napi dolgozók száma
-        const workerCounts = days.map(dayInfo => {
-            let count = 0;
-            allNamesData.forEach(person => {
-                const schedule = person.schedule;
-                if (schedule && schedule[dayInfo.index]) {
-                    const daySchedule = schedule[dayInfo.index];
-                    const start1 = formatTime(daySchedule.start1);
-                    if (start1 && start1 !== '-') {
-                        count++;
-                    }
-                }
-            });
-            return count;
-        });
-        
-        // Mai nap
-        const today = new Date();
-        const todayDay = today.getDate();
-        
-        // Napok kirajzolása
-        days.forEach((dayInfo, idx) => {
-            const isToday = dayInfo.dayNum === todayDay;
-            const workerCount = workerCounts[idx];
-            
-            const bgColor = isToday ? 'var(--accent-primary)' : 'var(--bg-secondary)';
-            const textColor = isToday ? '#fff' : 'var(--text-primary)';
-            const border = isToday ? '3px solid var(--accent-secondary)' : '1px solid var(--border-color)';
-            
-            calendarHTML += `
-                <div onclick="displayWorkersForDay('${dayInfo.dayName}', ${dayInfo.index})" 
-                     style="background: ${bgColor}; 
-                            color: ${textColor}; 
-                            border: ${border}; 
-                            border-radius: 6px; 
-                            padding: 8px 5px; 
-                            text-align: center; 
-                            cursor: pointer;
-                            transition: all 0.2s ease;
-                            min-height: 60px;
-                            display: flex;
-                            flex-direction: column;
-                            justify-content: space-between;
-                            font-size: 13px;"
-                     onmouseover="this.style.transform='scale(1.05)'; this.style.boxShadow='0 4px 12px var(--shadow)';"
-                     onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='none';">
-                    <div style="font-size: 16px; font-weight: bold;">${dayInfo.dayNum}</div>
-                    <div style="font-size: 10px; opacity: 0.8;">${dayInfo.dayName}</div>
-                    <div style="font-size: 12px; margin-top: 3px; font-weight: 600;">
-                        ${workerCount}
-                    </div>
-                </div>
-            `;
-        });
-        
-        calendarHTML += '</div></div>';
-        
-        scheduleContent.innerHTML = calendarHTML;
-        scheduleDisplay.classList.remove('hidden');
-        
-        // Statisztikák megjelenítése
-        displayStatsForDayView(allNamesData);
-        
-        // Mai nap dolgozóinak automatikus megjelenítése (today már deklarálva fent)
-        let todayIndex = -1;
-        for (let i = 0; i < days.length; i++) {
-            if (days[i].dayNum === todayDay) {
-                todayIndex = days[i].index;
-                break;
-            }
-        }
-        
-        // Ha mai nap nincs, akkor az első napot mutatjuk
-        if (todayIndex === -1 && days.length > 0) {
-            todayIndex = days[0].index;
-        }
-        
-        // Automatikusan megjeleníti a dolgozókat
-        if (todayIndex >= 0) {
-            const selectedDay = days.find(d => d.index === todayIndex);
-            if (selectedDay) {
-                displayWorkersForDay(selectedDay.dayName, todayIndex);
-            }
-        }
-    }
-    
-    
-    function switchToNameView() {
-        currentViewMode = 'names';
-        
-        document.querySelector('.sort-buttons').style.display = 'flex';
-        document.getElementById('nameSelect').style.display = 'block';
-        
-        // Excel nézet megjelenítése név nézetben CSAK ha van betöltött fájl
-        const excelView = document.getElementById('excelView');
-        if (excelView && originalWorkbook) {
-            excelView.classList.remove('hidden');
-        }
-        
-        // Statisztikák elrejtése név nézetben
-        document.getElementById('statsSection').classList.add('hidden');
-        
-        const toggleBtn = document.getElementById('viewToggleBtn');
-        if (toggleBtn) {
-            toggleBtn.innerHTML = '📅 Napi nézet';
-            
-        }
-        
-        displayNames(allNamesData, currentFileName);
-    }
-    
-    function displayWorkersForDay(dayName, dayIndex) {
-        // Dolgozók listája egy külön div-be, a naptár alá
-        let workersDivId = 'workersListDiv';
-        let workersDiv = document.getElementById(workersDivId);
-        
-        if (!workersDiv) {
-            workersDiv = document.createElement('div');
-            workersDiv.id = workersDivId;
-            document.getElementById('scheduleContent').appendChild(workersDiv);
-        }
-        
-        const workers = [];
-        const vacationPeople = [];
-        const sickLeavePeople = [];
-        const officePeople = []; // Irodai dolgozók
-        
-        // Irodai nevek
-        const officeNames = [
-            'Kis Norbert 8 órás',
-            'Ócsai István 8 órás',
-            'Szondy Levente 8 órás',
-            'Teichter József 8 órás',
-            'Tömböly Sándor'
-        ];
-        
-        // Szabadság színkód lekérése
-        const vacationColor = allNamesData.length > 0 && allNamesData[0].extraInfo && allNamesData[0].extraInfo.vacationColor 
-            ? allNamesData[0].extraInfo.vacationColor.toLowerCase().replace('#', '') 
-            : null;
-        
-        // Betegállomány színkód lekérése
-        const sickLeaveColor = allNamesData.length > 0 && allNamesData[0].extraInfo && allNamesData[0].extraInfo.sickLeaveColor 
-            ? allNamesData[0].extraInfo.sickLeaveColor.toLowerCase().replace('#', '') 
-            : null;
-        
-        allNamesData.forEach(personData => {
-            const schedule = personData.schedule;
-            if (schedule && schedule[dayIndex]) {
-                const daySchedule = schedule[dayIndex];
-                const start1 = formatTime(daySchedule.start1);
-                const end1 = formatTime(daySchedule.end1);
-                const start2 = formatTime(daySchedule.start2);
-                const end2 = formatTime(daySchedule.end2);
-                
-                if (start1 && start1 !== '-') {
-                    const rowColor = daySchedule.color ? `#${daySchedule.color}` : 'var(--bg-secondary)';
-                    const rowColorClean = daySchedule.color ? daySchedule.color.toLowerCase().replace('#', '') : '';
-                    
-                    const startColor = daySchedule.start1Color ? `#${daySchedule.start1Color}` : 'var(--bg-secondary)';
-                    const endColor = daySchedule.end1Color ? `#${daySchedule.end1Color}` : 'var(--bg-secondary)';
-                    
-                    let timeDisplay = `${start1} - ${end1}`;
-                    if (start2 && start2 !== '-') {
-                        timeDisplay += ` / ${start2} - ${end2}`;
-                    }
-                    
-                    const personInfo = {
-                        name: personData.name,
-                        timeDisplay: timeDisplay,
-                        start: start1,
-                        end: end1,
-                        color: rowColor,
-                        startColor: startColor,
-                        endColor: endColor,
-                        startMinutes: parseTimeToMinutes(daySchedule.start1)
-                    };
-                    
-                    // Szabadság színnel egyezik?
-                    if (vacationColor && rowColorClean === vacationColor) {
-                        vacationPeople.push(personInfo);
-                    } else if (sickLeaveColor && rowColorClean === sickLeaveColor) {
-                        // Betegállomány színnel egyezik?
-                        sickLeavePeople.push(personInfo);
-                    } else if (officeNames.includes(personData.name) && start1 === '08:00' && end1 === '16:00') {
-                        // Irodai dolgozó: megadott nevek ÉS 08:00-16:00 beosztás
-                        officePeople.push(personInfo);
-                    } else {
-                        workers.push(personInfo);
-                    }
-                }
-            }
-        });
-        
-        // Napalos és éjszakás számolása
-        // Napalos: 5:30 (330 perc) - 17:30 (1050 perc)
-        // Éjszakás: 17:30 - 5:30 (minden más)
-        let dayShiftCount = 0;
-        let nightShiftCount = 0;
-        
-        workers.forEach(worker => {
-            const startMin = worker.startMinutes;
-            // Napalos: 330 <= start < 1050
-            if (startMin >= 330 && startMin < 1050) {
-                dayShiftCount++;
-            } else {
-                nightShiftCount++;
-            }
-        });
-        
-        workers.sort((a, b) => {
-            if (a.startMinutes !== b.startMinutes) {
-                return a.startMinutes - b.startMinutes;
-            }
-            return a.name.localeCompare(b.name, 'hu');
-        });
-        
-        // Dátum meghatározása
-        const selectedDay = allNamesData[0].schedule[dayIndex];
-        const dateStr = formatDate(selectedDay.date);
-        
-        // Statisztikák frissítése az adott napra
-        updateStatsForDay(workers.length, dayIndex, vacationPeople.length, sickLeavePeople.length, officePeople.length, dayShiftCount, nightShiftCount);
-        
-        let workersHTML = '<div style="margin-top: 20px;">';
-        
-        workers.forEach(worker => {
-            workersHTML += `
-                <div style="padding: 12px; margin: 8px 0; border-radius: 8px; border: 1px solid var(--border-color); transition: all 0.2s ease; display: flex; align-items: center; gap: 15px; background: linear-gradient(to right, ${worker.startColor} 0%, ${worker.startColor} 50%, ${worker.endColor} 50%, ${worker.endColor} 100%);" 
-                     onmouseover="this.style.transform='translateX(5px)'; this.style.boxShadow='0 4px 12px var(--shadow)';"
-                     onmouseout="this.style.transform='translateX(0)'; this.style.boxShadow='none';">
-                    <strong style="color: var(--text-primary); text-shadow: 1px 1px 2px rgba(0,0,0,0.3);">${worker.name}</strong>
-                    <span style="margin-left: auto; color: var(--text-primary); font-weight: 600; text-shadow: 1px 1px 2px rgba(0,0,0,0.3);">${worker.start} - ${worker.end}</span>
-                </div>
-            `;
-        });
-        
-        workersHTML += '</div>';
-        
-        // Szabadságosok szekciója
-        let vacationHTML = '';
-        if (vacationPeople.length > 0) {
-            vacationPeople.sort((a, b) => a.name.localeCompare(b.name, 'hu'));
-            
-            vacationHTML = `
-                <div style="margin-top: 25px; padding: 15px; background: var(--bg-tertiary); border-radius: 10px; border-left: 4px solid #ff9800;">
-                    <h4 style="margin: 0 0 12px 0; color: #ff9800; font-size: 16px;">🏖️ Szabadságon (${vacationPeople.length} fő)</h4>
-                    <div>
-            `;
-            
-            vacationPeople.forEach(person => {
-                vacationHTML += `
-                    <div style="background-color: ${person.color}; padding: 10px; margin: 6px 0; border-radius: 6px; border: 1px solid var(--border-color);">
-                        <strong style="color: var(--text-primary);">${person.name}</strong>
-                    </div>
-                `;
-            });
-            
-            vacationHTML += '</div></div>';
-        }
-        
-        // Betegállományban lévők szekciója
-        let sickLeaveHTML = '';
-        if (sickLeavePeople.length > 0) {
-            sickLeavePeople.sort((a, b) => a.name.localeCompare(b.name, 'hu'));
-            
-            sickLeaveHTML = `
-                <div style="margin-top: 25px; padding: 15px; background: var(--bg-tertiary); border-radius: 10px; border-left: 4px solid #e91e63;">
-                    <h4 style="margin: 0 0 12px 0; color: #e91e63; font-size: 16px;">🏥 Betegállományban (${sickLeavePeople.length} fő)</h4>
-                    <div>
-            `;
-            
-            sickLeavePeople.forEach(person => {
-                sickLeaveHTML += `
-                    <div style="background-color: ${person.color}; padding: 10px; margin: 6px 0; border-radius: 6px; border: 1px solid var(--border-color);">
-                        <strong style="color: var(--text-primary);">${person.name}</strong>
-                    </div>
-                `;
-            });
-            
-            sickLeaveHTML += '</div></div>';
-        }
-        
-        // Irodai dolgozók szekciója
-        let officeHTML = '';
-        if (officePeople.length > 0) {
-            officePeople.sort((a, b) => a.name.localeCompare(b.name, 'hu'));
-            
-            officeHTML = `
-                <div style="margin-top: 25px; padding: 15px; background: var(--bg-tertiary); border-radius: 10px; border-left: 4px solid #2196f3;">
-                    <h4 style="margin: 0 0 12px 0; color: #2196f3; font-size: 16px;">🏢 Iroda (${officePeople.length} fő)</h4>
-                    <div>
-            `;
-            
-            officePeople.forEach(person => {
-                officeHTML += `
-                    <div style="padding: 10px; margin: 6px 0; border-radius: 6px; border: 1px solid var(--border-color); display: flex; align-items: center; gap: 15px; background: linear-gradient(to right, ${person.startColor} 0%, ${person.startColor} 50%, ${person.endColor} 50%, ${person.endColor} 100%);">
-                        <strong style="color: var(--text-primary); text-shadow: 1px 1px 2px rgba(0,0,0,0.3);">${person.name}</strong>
-                        <span style="margin-left: auto; color: var(--text-primary); font-weight: 600; text-shadow: 1px 1px 2px rgba(0,0,0,0.3);">${person.start} - ${person.end}</span>
-                    </div>
-                `;
-            });
-            
-            officeHTML += '</div></div>';
-        }
-        
-        let atayHTML = '';
-        if ((allNamesData.length > 0 && allNamesData[0].extraInfo && allNamesData[0].extraInfo.atayData && allNamesData[0].extraInfo.atayData.length > 0) ||
-            (allNamesData.length > 0 && allNamesData[0].extraInfo && allNamesData[0].extraInfo.extraNotes && allNamesData[0].extraInfo.extraNotes.length > 0)) {
-            atayHTML = '<div class="section-header collapsed" onclick="toggleSection(this)">Megjegyzés, Színmagyarázat</div>';
-            atayHTML += '<div class="extra-info collapsible-content hidden">';
-            
-            // ATAY sor adatok
-            if (allNamesData[0].extraInfo && allNamesData[0].extraInfo.atayData) {
-                allNamesData[0].extraInfo.atayData.forEach(cellData => {
-                    if (cellData && cellData.value && cellData.value !== '') {
-                        const bgColor = cellData.color ? `#${cellData.color}` : 'white';
-                        atayHTML += `<div class="info-row" style="background-color: ${bgColor};">${cellData.value}</div>`;
-                    }
-                });
-            }
-            
-            // AT4, AV4, AX4 további megjegyzések (ugyanabba a szekcióba)
-            if (allNamesData[0].extraInfo && allNamesData[0].extraInfo.extraNotes) {
-                allNamesData[0].extraInfo.extraNotes.forEach(note => {
-                    const bgColor = note.color ? `#${note.color}` : 'white';
-                    atayHTML += `<div class="info-row" style="background-color: ${bgColor};">${note.value}</div>`;
-                });
-            }
-            
-            atayHTML += '</div>';
-        }
-        
-        // Beosztást készítette (AT8 tartalom | jelnél kettéválasztva) - napi nézetben is
-        let createdByHTML = '';
-        if (allNamesData.length > 0 && allNamesData[0].extraInfo && allNamesData[0].extraInfo.createdByContent) {
-            const lines = allNamesData[0].extraInfo.createdByContent.split('|').map(line => line.trim()).filter(line => line);
-            
-            let linesHTML = '';
-            lines.forEach(line => {
-                linesHTML += `<div class="info-row">${line}</div>`;
-            });
-            
-            createdByHTML = `
-                <div class="section-header collapsed" onclick="toggleSection(this)">Beosztást készítette</div>
-                <div class="extra-info collapsible-content hidden">
-                    ${linesHTML}
-                </div>
-            `;
-        }
-        
-        workersDiv.innerHTML = `
-            <div style="margin-top: 20px; padding: 15px; background: var(--bg-tertiary); border-radius: 10px;">
-                <h3 style="margin: 0 0 15px 0; color: var(--accent-primary);">📅 ${dayName} - ${dateStr} - Dolgozók</h3>
-                ${workersHTML}
-                ${vacationHTML}
-                ${sickLeaveHTML}
-                ${officeHTML}
-                ${atayHTML}
-                ${createdByHTML}
-            </div>
-        `;
-    }
-    
-    // Initialize Feather icons
-    
+loadFileList();
 </script>
-```
 
 </body>
 </html>
